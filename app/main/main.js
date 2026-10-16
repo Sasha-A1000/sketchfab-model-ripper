@@ -253,9 +253,15 @@ function registerProtocol() {
 
     let target;
     if (host === "bundle") {
-      target = path.join(APP_ROOT, rel);
-      const root = path.resolve(APP_ROOT);
-      if (!path.resolve(target).startsWith(root)) {
+      // Keep app files rooted in app/, but allow the packaged root-level icons
+      // directory to be served for the window badge and OS window icon.
+      const isRootIcon = rel.startsWith("icons/");
+      const root = path.resolve(
+        isRootIcon ? path.join(APP_ROOT, "..", "icons") : APP_ROOT,
+      );
+      const relative = isRootIcon ? rel.slice("icons/".length) : rel;
+      target = path.resolve(root, relative);
+      if (target !== root && !target.startsWith(root + path.sep)) {
         return new Response("forbidden", { status: 403 });
       }
     } else if (host === "media") {
