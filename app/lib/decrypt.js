@@ -107,7 +107,10 @@ async function initWasm(wasmBytes) {
 }
 
 function b64ToBytes(b64) {
-  const clean = String(b64).replace(/\\n/g, "").replace(/\n/g, "").replace(/\s/g, "");
+  const clean = String(b64)
+    .replace(/\\n/g, "")
+    .replace(/\n/g, "")
+    .replace(/\s/g, "");
   const bin = atob(clean);
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
@@ -125,7 +128,16 @@ export async function decryptBinzBytes(wasmBytes, encData, diterB, staticKey) {
   const advance = a["FrZSB5b3UgY3J5Ck5ldmVyIGdvbm5hIHN"];
   const getInfo = a["bGwgYSBsaWUgYW5kIGh1cnQgeW91Cg"];
   const getStart = a["TmV2ZXIgZ29ubmEgZ2l2ZSB5b3UgdXAKT"];
-  if (!allocInput || !reset || !rickRolled || !allocDiterB || !process_ || !advance || !getInfo || !getStart) {
+  if (
+    !allocInput ||
+    !reset ||
+    !rickRolled ||
+    !allocDiterB ||
+    !process_ ||
+    !advance ||
+    !getInfo ||
+    !getStart
+  ) {
     throw new Error("WASM exports missing (decrypt.wasm outdated?)");
   }
 
@@ -141,13 +153,17 @@ export async function decryptBinzBytes(wasmBytes, encData, diterB, staticKey) {
   }
   let xorAll = collected[19];
   for (let t = 0; t < 10; t++) xorAll ^= collected[2 * t];
-  const keyArr = Array.from({ length: 10 }, (_, t) => collected[2 * t] ^ xorAll);
+  const keyArr = Array.from(
+    { length: 10 },
+    (_, t) => collected[2 * t] ^ xorAll,
+  );
   const keyOff = rickRolled(seed, 40);
   let mem = wasm.H();
   for (let t = 0; t < 10; t++) {
     let h = keyArr[t].toString(16);
     h = "0".repeat(4 - h.length) + h;
-    for (let n = 0; n < h.length; n++) mem[keyOff + n + 4 * t] = h.charCodeAt(n);
+    for (let n = 0; n < h.length; n++)
+      mem[keyOff + n + 4 * t] = h.charCodeAt(n);
   }
 
   const diterBBytes = b64ToBytes(diterB);
@@ -157,7 +173,8 @@ export async function decryptBinzBytes(wasmBytes, encData, diterB, staticKey) {
   for (let i = 0; i < diterBBytes.length; i++) mem[dOff + i] = diterBBytes[i];
   process_(0);
 
-  const input = encData instanceof Uint8Array ? encData : new Uint8Array(encData);
+  const input =
+    encData instanceof Uint8Array ? encData : new Uint8Array(encData);
   const chunks = [];
   for (let off = 0; off < input.length; off += 10240) {
     const len = Math.min(10240, input.length - off);
@@ -210,7 +227,8 @@ export async function loadWasmBytes() {
 export function outNameFor(binzName) {
   if (binzName === "file.binz") return "file.osgjs";
   if (binzName === "model_file.binz") return "model_file.bin";
-  if (binzName === "model_file_wireframe.binz") return "model_file_wireframe.bin";
+  if (binzName === "model_file_wireframe.binz")
+    return "model_file_wireframe.bin";
   if (binzName.endsWith(".binz")) return binzName.slice(0, -5) + ".bin";
   return binzName + ".out";
 }

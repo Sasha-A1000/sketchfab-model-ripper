@@ -112,7 +112,14 @@ export function quatAccumulate(arr) {
  * QuatSlerpChannelCompressed* uses. Without it, itemSize 4 means a tangent
  * whose handedness rides in bit 1024 of the first component.
  */
-export function decodeSpherical(encoded, output, itemSize, epsilon, nphi, hasThirdComponent) {
+export function decodeSpherical(
+  encoded,
+  output,
+  itemSize,
+  epsilon,
+  nphi,
+  hasThirdComponent,
+) {
   epsilon = epsilon || 0.25;
   nphi = nphi || 720;
   const PI = 3.14159265359;
@@ -141,7 +148,8 @@ export function decodeSpherical(encoded, output, itemSize, epsilon, nphi, hasThi
     let E = (cosEps - R * Math.cos(A1)) / Math.max(1e-5, w * Math.sin(A1));
     if (E > 1) E = 1;
     else if (E < -1) E = -1;
-    const P = (6.28318530718 * x) / Math.ceil(PI / Math.max(1e-5, Math.acos(E)));
+    const P =
+      (6.28318530718 * x) / Math.ceil(PI / Math.max(1e-5, Math.acos(E)));
 
     const dx = w * Math.cos(P);
     const dy = w * Math.sin(P);

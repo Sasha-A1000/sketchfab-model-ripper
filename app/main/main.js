@@ -83,7 +83,7 @@ function reportCrash(title, detail) {
   try {
     dialog.showErrorBox(
       title,
-      `${detail}\n\nЛог приложения / App log:\n${logPath()}`
+      `${detail}\n\nЛог приложения / App log:\n${logPath()}`,
     );
   } catch (_) {}
 }
@@ -92,11 +92,14 @@ function installCrashHandlers() {
   process.on("uncaughtException", (e) => {
     reportCrash(
       "Sketchfab Public Downloader — непредвиденная ошибка",
-      (e && e.stack) || String(e)
+      (e && e.stack) || String(e),
     );
   });
   process.on("unhandledRejection", (e) => {
-    logLine("error", `unhandledRejection: ${(e && (e.stack || e.message)) || e}`);
+    logLine(
+      "error",
+      `unhandledRejection: ${(e && (e.stack || e.message)) || e}`,
+    );
   });
   app.on("render-process-gone", (_e, _contents, details) => {
     logLine("error", `render-process-gone: ${JSON.stringify(details)}`);
@@ -229,7 +232,8 @@ async function cleanMediaDir() {
       const p = path.join(dir, f);
       try {
         const st = await fsp.stat(p);
-        if (now - st.mtimeMs > 6 * 60 * 60 * 1000) await fsp.rm(p, { force: true });
+        if (now - st.mtimeMs > 6 * 60 * 60 * 1000)
+          await fsp.rm(p, { force: true });
       } catch (_) {}
     }
   } catch (_) {}
@@ -249,9 +253,15 @@ function registerProtocol() {
 
     let target;
     if (host === "bundle") {
-      target = path.join(APP_ROOT, rel);
-      const root = path.resolve(APP_ROOT);
-      if (!path.resolve(target).startsWith(root)) {
+      // Keep app files rooted in app/, but allow the packaged root-level icons
+      // directory to be served for the window badge and OS window icon.
+      const isRootIcon = rel.startsWith("icons/");
+      const root = path.resolve(
+        isRootIcon ? path.join(APP_ROOT, "..", "icons") : APP_ROOT,
+      );
+      const relative = isRootIcon ? rel.slice("icons/".length) : rel;
+      target = path.resolve(root, relative);
+      if (target !== root && !target.startsWith(root + path.sep)) {
         return new Response("forbidden", { status: 403 });
       }
     } else if (host === "media") {
@@ -267,7 +277,8 @@ function registerProtocol() {
 
     try {
       const data = await fsp.readFile(target);
-      const type = MIME[path.extname(target).toLowerCase()] || "application/octet-stream";
+      const type =
+        MIME[path.extname(target).toLowerCase()] || "application/octet-stream";
       return new Response(data, {
         status: 200,
         headers: {
@@ -277,7 +288,9 @@ function registerProtocol() {
         },
       });
     } catch (e) {
-      return new Response(`not found: ${rel} (${e && e.code})`, { status: 404 });
+      return new Response(`not found: ${rel} (${e && e.code})`, {
+        status: 404,
+      });
     }
   });
 }
@@ -299,7 +312,7 @@ function iconFile() {
 }
 
 function createUiWindow() {
-  const saved = (store.getDesktop().window || null) || {};
+  const saved = store.getDesktop().window || null || {};
   uiWin = new BrowserWindow({
     width: saved.width || 1200,
     height: saved.height || 790,
@@ -324,22 +337,27 @@ function createUiWindow() {
 
   uiWin.removeMenu();
   if (process.argv.some((a) => a.startsWith("--selftest"))) {
-    uiWin.webContents.on("console-message", (_e, level, message, line, source) => {
-      console.log(`[ui-console:${level}] ${message} (${source || ""}:${line || 0})`);
-    });
+    uiWin.webContents.on(
+      "console-message",
+      (_e, level, message, line, source) => {
+        console.log(
+          `[ui-console:${level}] ${message} (${source || ""}:${line || 0})`,
+        );
+      },
+    );
     uiWin.webContents.on("render-process-gone", (_e, d) =>
-      console.log("[ui] render-process-gone", JSON.stringify(d))
+      console.log("[ui] render-process-gone", JSON.stringify(d)),
     );
   }
   uiWin.webContents.on("did-fail-load", (_e, code, desc, url) => {
     logLine("error", `ui did-fail-load ${code} ${desc} ${url}`);
     reportCrash(
       "Не удалось загрузить интерфейс",
-      `did-fail-load ${code} ${desc}\n${url}`
+      `did-fail-load ${code} ${desc}\n${url}`,
     );
   });
   uiWin.webContents.on("render-process-gone", (_e, d) =>
-    logLine("error", `ui renderer gone: ${JSON.stringify(d)}`)
+    logLine("error", `ui renderer gone: ${JSON.stringify(d)}`),
   );
   logLine("info", "loading UI window");
   uiWin.loadURL(`${BUNDLE}ui/index.html`);
@@ -348,10 +366,21 @@ function createUiWindow() {
   const persistBounds = () => {
     if (!uiWin || uiWin.isDestroyed() || uiWin.isMinimized()) return;
     const b = uiWin.getBounds();
-    store.setDesktop({ window: { width: b.width, height: b.height, x: b.x, y: b.y } });
+    store.setDesktop({
+      window: { width: b.width, height: b.height, x: b.x, y: b.y },
+    });
   };
   uiWin.on("resize", persistBounds);
   uiWin.on("move", persistBounds);
+  uiWin.on("close", () => {
+    if (workerWin && !workerWin.isDestroyed()) {
+      logLine(
+        "info",
+        "main window closing; force-closing hidden worker window",
+      );
+    }
+    closeWorkerWindow("main window closed");
+  });
   uiWin.on("closed", () => {
     uiWin = null;
   });
@@ -365,28 +394,36 @@ function createUiWindow() {
   });
   // F12 / Ctrl+Shift+I devtools, Ctrl+R reload
   // --shot=FILE [--shot-delay=MS] [--shot-js=CODE] : capture the window to PNG
-  // and exit — used to build the screenshots in docs/ headlessly.
+  // and exit — useful for headless UI smoke tests.
   const shotArg = process.argv.find((a) => a.startsWith("--shot="));
   if (shotArg) {
     const file = shotArg.slice("--shot=".length);
     const delayArg = process.argv.find((a) => a.startsWith("--shot-delay="));
-    const delay = delayArg ? Number(delayArg.slice("--shot-delay=".length)) : 15000;
+    const delay = delayArg
+      ? Number(delayArg.slice("--shot-delay=".length))
+      : 15000;
     const jsArg = process.argv.find((a) => a.startsWith("--shot-js="));
     uiWin.webContents.once("did-finish-load", () => {
-      setTimeout(async () => {
-        try {
-          if (jsArg) {
-            await uiWin.webContents.executeJavaScript(jsArg.slice("--shot-js=".length), true);
-            await new Promise((r) => setTimeout(r, 1200));
+      setTimeout(
+        async () => {
+          try {
+            if (jsArg) {
+              await uiWin.webContents.executeJavaScript(
+                jsArg.slice("--shot-js=".length),
+                true,
+              );
+              await new Promise((r) => setTimeout(r, 1200));
+            }
+            const img = await uiWin.webContents.capturePage();
+            await fsp.writeFile(file, img.toPNG());
+            console.log("[shot]", file, img.getSize());
+          } catch (e) {
+            console.log("[shot] failed", e && e.message);
           }
-          const img = await uiWin.webContents.capturePage();
-          await fsp.writeFile(file, img.toPNG());
-          console.log("[shot]", file, img.getSize());
-        } catch (e) {
-          console.log("[shot] failed", e && e.message);
-        }
-        app.exit(0);
-      }, Math.max(1500, delay));
+          app.exit(0);
+        },
+        Math.max(1500, delay),
+      );
     });
   }
 
@@ -398,26 +435,37 @@ function createUiWindow() {
     uiWin.webContents.once("did-finish-load", () => {
       setTimeout(() => {
         uiWin.webContents
-          .executeJavaScript(`document.getElementById("tab-${name}")?.click()`, true)
+          .executeJavaScript(
+            `document.getElementById("tab-${name}")?.click()`,
+            true,
+          )
           .catch(() => {});
       }, 2600);
     });
   }
   if (process.argv.includes("--uitest-download")) {
     uiWin.webContents.once("did-finish-load", () => {
-      setTimeout(() => {
-        uiWin.webContents
-          .executeJavaScript(
-            `(() => { const b = document.getElementById("btn-dl"); if (b && !b.disabled) b.click(); return !!b; })()`,
-            true
-          )
-          .catch(() => {});
-      }, process.env.SF_UITEST_DELAY ? Number(process.env.SF_UITEST_DELAY) : 1000);
+      setTimeout(
+        () => {
+          uiWin.webContents
+            .executeJavaScript(
+              `(() => { const b = document.getElementById("btn-dl"); if (b && !b.disabled) b.click(); return !!b; })()`,
+              true,
+            )
+            .catch(() => {});
+        },
+        process.env.SF_UITEST_DELAY
+          ? Number(process.env.SF_UITEST_DELAY)
+          : 1000,
+      );
     });
   }
   uiWin.webContents.on("before-input-event", (e, input) => {
     if (input.type !== "keyDown") return;
-    if (input.key === "F12" || (input.control && input.shift && input.key.toLowerCase() === "i")) {
+    if (
+      input.key === "F12" ||
+      (input.control && input.shift && input.key.toLowerCase() === "i")
+    ) {
       uiWin.webContents.toggleDevTools();
       e.preventDefault();
     }
@@ -429,7 +477,7 @@ function createUiWindow() {
 function createWorkerWindow() {
   if (workerWin && !workerWin.isDestroyed()) return workerWin;
   workerReady = false;
-  workerWin = new BrowserWindow({
+  const win = new BrowserWindow({
     show: false,
     width: 1024,
     height: 768,
@@ -443,30 +491,42 @@ function createWorkerWindow() {
       backgroundThrottling: false,
     },
   });
-  workerWin.removeMenu();
+  workerWin = win;
+  win.removeMenu();
   if (process.argv.some((a) => a.startsWith("--selftest"))) {
-    workerWin.webContents.on("console-message", (_e, level, message, line, source) => {
-      console.log(`[worker-console:${level}] ${message} (${source || ""}:${line || 0})`);
-    });
-    workerWin.webContents.on("render-process-gone", (_e, d) =>
-      console.log("[worker] render-process-gone", JSON.stringify(d))
+    win.webContents.on(
+      "console-message",
+      (_e, level, message, line, source) => {
+        console.log(
+          `[worker-console:${level}] ${message} (${source || ""}:${line || 0})`,
+        );
+      },
+    );
+    win.webContents.on("render-process-gone", (_e, d) =>
+      console.log("[worker] render-process-gone", JSON.stringify(d)),
     );
   }
-  workerWin.webContents.on("did-fail-load", (_e, code, desc, url) => {
+  win.webContents.on("did-fail-load", (_e, code, desc, url) => {
     logLine("error", `worker did-fail-load ${code} ${desc} ${url}`);
   });
   logLine("info", "loading worker window");
-  workerWin.loadURL(`${BUNDLE}worker/worker.html`);
-  workerWin.on("closed", () => {
+  win.loadURL(`${BUNDLE}worker/worker.html`);
+  win.on("closed", () => {
+    if (workerWin !== win) return;
     workerWin = null;
     workerReady = false;
+    workerQueue = [];
+    failAllWaiters("worker window closed");
   });
-  workerWin.webContents.on("render-process-gone", () => {
+  win.webContents.on("render-process-gone", () => {
+    if (workerWin !== win) return;
     workerReady = false;
     workerWin = null;
+    workerQueue = [];
     failAllWaiters("worker crashed");
+    win.destroy();
   });
-  return workerWin;
+  return win;
 }
 
 function sendToWorker(cmd) {
@@ -491,6 +551,20 @@ function failAllWaiters(message) {
     w.resolve({ ok: false, error: message });
   }
   waiters.clear();
+}
+
+/**
+ * The hidden pipeline window keeps Electron alive after the visible UI closes.
+ * Force-destroy it while quitting so window-all-closed can fire and the
+ * single-instance lock is released for the next launch.
+ */
+function closeWorkerWindow(reason = "application is closing") {
+  const win = workerWin;
+  workerWin = null;
+  workerReady = false;
+  workerQueue = [];
+  failAllWaiters(reason);
+  if (win && !win.isDestroyed()) win.destroy();
 }
 
 /**
@@ -536,7 +610,12 @@ ipcMain.on("sf-ev", (_e, ev) => {
     const w = waiters.get(ev.id);
     waiters.delete(ev.id);
     clearTimeout(w.timer);
-    if (ev.payload && ev.payload.ok === true && ev.payload.path && ev.payload.openFolder !== false) {
+    if (
+      ev.payload &&
+      ev.payload.ok === true &&
+      ev.payload.path &&
+      ev.payload.openFolder !== false
+    ) {
       // handled by the caller (download flow) – keep raw result here
     }
     w.resolve(ev.payload || { ok: false, error: "empty worker result" });
@@ -612,10 +691,14 @@ ipcMain.handle("app:pickFolder", async (_e, opts = {}) => {
   const parent = workerWin && !workerWin.isDestroyed() ? workerWin : uiWin;
   const res = await dialog.showOpenDialog(parent, {
     title: opts.title || "Выберите папку / Choose folder",
-    defaultPath: opts.defaultPath || store.getDesktop().lastSaveDir || app.getPath("downloads"),
+    defaultPath:
+      opts.defaultPath ||
+      store.getDesktop().lastSaveDir ||
+      app.getPath("downloads"),
     properties: ["openDirectory", "createDirectory"],
   });
-  if (res.canceled || !res.filePaths || !res.filePaths.length) return { ok: false, canceled: true };
+  if (res.canceled || !res.filePaths || !res.filePaths.length)
+    return { ok: false, canceled: true };
   store.setDesktop({ lastSaveDir: res.filePaths[0] });
   return { ok: true, dir: res.filePaths[0] };
 });
@@ -624,7 +707,10 @@ ipcMain.handle("app:askSavePath", async (_e, { defaultName, filters } = {}) => {
   const desktop = store.getDesktop();
   const res = await dialog.showSaveDialog(uiWin, {
     title: "Куда сохранить архив? / Save archive as",
-    defaultPath: path.join(desktop.lastSaveDir || app.getPath("downloads"), defaultName || "model.zip"),
+    defaultPath: path.join(
+      desktop.lastSaveDir || app.getPath("downloads"),
+      defaultName || "model.zip",
+    ),
     filters: filters || [
       { name: "ZIP archive", extensions: ["zip"] },
       { name: "All files", extensions: ["*"] },
@@ -653,26 +739,29 @@ ipcMain.handle("app:explorerReveal", (_e, p) => {
   return { ok: true };
 });
 
-ipcMain.handle("app:saveText", async (_e, { defaultName, text, filters } = {}) => {
-  const res = await dialog.showSaveDialog(uiWin, {
-    title: "Сохранить / Save",
-    defaultPath: path.join(
-      store.getDesktop().lastSaveDir || app.getPath("downloads"),
-      defaultName || "sf-dl-log.txt"
-    ),
-    filters: filters || [
-      { name: "Text", extensions: ["txt"] },
-      { name: "All files", extensions: ["*"] },
-    ],
-  });
-  if (res.canceled || !res.filePath) return { ok: false, canceled: true };
-  try {
-    await fsp.writeFile(res.filePath, String(text || ""), "utf8");
-    return { ok: true, path: res.filePath };
-  } catch (e) {
-    return { ok: false, error: e && e.message ? e.message : String(e) };
-  }
-});
+ipcMain.handle(
+  "app:saveText",
+  async (_e, { defaultName, text, filters } = {}) => {
+    const res = await dialog.showSaveDialog(uiWin, {
+      title: "Сохранить / Save",
+      defaultPath: path.join(
+        store.getDesktop().lastSaveDir || app.getPath("downloads"),
+        defaultName || "sf-dl-log.txt",
+      ),
+      filters: filters || [
+        { name: "Text", extensions: ["txt"] },
+        { name: "All files", extensions: ["*"] },
+      ],
+    });
+    if (res.canceled || !res.filePath) return { ok: false, canceled: true };
+    try {
+      await fsp.writeFile(res.filePath, String(text || ""), "utf8");
+      return { ok: true, path: res.filePath };
+    } catch (e) {
+      return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+  },
+);
 
 /* ------------------------------------------------------------------ *
  * Preview (stage 1: mesh, stage 2: textures)
@@ -710,11 +799,13 @@ const probeCache = new Map(); // url → { t, meta }
 
 async function probe(url) {
   const hit = probeCache.get(url);
-  if (hit && Date.now() - hit.t < 60 * 1000) return { ok: true, meta: hit.meta, cached: true };
+  if (hit && Date.now() - hit.t < 60 * 1000)
+    return { ok: true, meta: hit.meta, cached: true };
   const res = await workerCall({ cmd: "probe", url }, 90 * 1000);
   if (res && res.ok && res.meta) {
     probeCache.set(url, { t: Date.now(), meta: res.meta });
-    while (probeCache.size > 30) probeCache.delete(probeCache.keys().next().value);
+    while (probeCache.size > 30)
+      probeCache.delete(probeCache.keys().next().value);
   }
   return res;
 }
@@ -726,7 +817,7 @@ ipcMain.handle("sf:probe", async (_e, { url } = {}) => {
 
 function suggestedName(meta, textures) {
   const base = (meta && meta.name) || "sketchfab-model";
-  const uid8 = (meta && meta.uid ? String(meta.uid).slice(0, 8) : "");
+  const uid8 = meta && meta.uid ? String(meta.uid).slice(0, 8) : "";
   const suffix = textures ? "-textures" : "";
   return `${base}${uid8 ? "-" + uid8 : ""}${suffix}.zip`;
 }
@@ -748,7 +839,10 @@ async function askSavePath(defaultName) {
   const res = await dialog.showSaveDialog(uiWin, {
     title: "Куда сохранить архив? / Save archive as",
     buttonLabel: "Сохранить",
-    defaultPath: path.join(desktop.lastSaveDir || app.getPath("downloads"), defaultName),
+    defaultPath: path.join(
+      desktop.lastSaveDir || app.getPath("downloads"),
+      defaultName,
+    ),
     filters: [
       { name: "ZIP archive", extensions: ["zip"] },
       { name: "All files", extensions: ["*"] },
@@ -767,7 +861,10 @@ async function performDownload({ url, flags } = {}) {
 
   const probeRes = await probe(url);
   if (!probeRes || probeRes.ok === false) {
-    return { ok: false, error: (probeRes && probeRes.error) || "cannot read model info" };
+    return {
+      ok: false,
+      error: (probeRes && probeRes.error) || "cannot read model info",
+    };
   }
   const meta = probeRes.meta || {};
   const name = suggestedName(meta, !!(flags && flags.textures));
@@ -784,12 +881,12 @@ async function performDownload({ url, flags } = {}) {
   // moves the finished ZIP to wherever the user wants it.
   const tempPath = path.join(
     mediaDir(),
-    `sf-dl-${Date.now()}-${crypto.randomBytes(3).toString("hex")}.zip`
+    `sf-dl-${Date.now()}-${crypto.randomBytes(3).toString("hex")}.zip`,
   );
 
   const done = await workerCall(
     { cmd: "download", url, targetPath: tempPath, flags: flags || {} },
-    60 * 60 * 1000
+    60 * 60 * 1000,
   );
   if (!done || !done.ok) {
     await fsp.rm(tempPath, { force: true }).catch(() => {});
@@ -798,7 +895,9 @@ async function performDownload({ url, flags } = {}) {
 
   if (!finalPath) {
     if (mode === "auto") {
-      finalPath = uniquePath(path.join(desktop.lastSaveDir || app.getPath("downloads"), name));
+      finalPath = uniquePath(
+        path.join(desktop.lastSaveDir || app.getPath("downloads"), name),
+      );
     } else {
       const picked = await askSavePath(name);
       if (!picked) {
@@ -815,7 +914,10 @@ async function performDownload({ url, flags } = {}) {
         });
         if (keep.response === 0) {
           finalPath = uniquePath(
-            path.join(desktop.lastSaveDir || app.getPath("downloads"), done.zipName || name)
+            path.join(
+              desktop.lastSaveDir || app.getPath("downloads"),
+              done.zipName || name,
+            ),
           );
         } else {
           await fsp.rm(tempPath, { force: true }).catch(() => {});
@@ -870,14 +972,27 @@ ipcMain.handle("sf:bulkStart", async (_e, { urls, dir, flags } = {}) => {
   for (let i = 0; i < list.length; i++) {
     if (bulk.stop) break;
     const url = list[i];
-    forwardToUi({ type: "bulk-item", runId, index: i, total: list.length, url, state: "start" });
+    forwardToUi({
+      type: "bulk-item",
+      runId,
+      index: i,
+      total: list.length,
+      url,
+      state: "start",
+    });
     const info = await probe(url);
     const meta = (info && info.meta) || {};
     const fileName = suggestedName(meta, !!(flags && flags.textures));
     const target = uniquePath(path.join(dir, fileName));
     const res = await workerCall(
-      { cmd: "download", url, targetPath: target, flags: flags || {}, bulk: true },
-      60 * 60 * 1000
+      {
+        cmd: "download",
+        url,
+        targetPath: target,
+        flags: flags || {},
+        bulk: true,
+      },
+      60 * 60 * 1000,
     );
     if (res && res.ok) {
       ok++;
@@ -979,37 +1094,51 @@ async function runSelfTest(url) {
 
   /* ---- 1. probe ---------------------------------------------------- */
   const p = await probe(url);
-  out("probe", { ok: p.ok, name: p.meta && p.meta.name, author: p.meta && p.meta.author, uid: p.meta && p.meta.uid });
+  out("probe", {
+    ok: p.ok,
+    name: p.meta && p.meta.name,
+    author: p.meta && p.meta.author,
+    uid: p.meta && p.meta.uid,
+  });
   if (!p.ok) throw new Error("probe failed: " + p.error);
 
-  out("uiBoot", await evalInUi(`({
+  out(
+    "uiBoot",
+    await evalInUi(`({
     title: document.title,
     tabs: [...document.querySelectorAll('.tab')].map(t => t.textContent.trim()),
     errors: window.__uiErrors || [],
     hasPreviewApi: typeof window.sf.preview,
     canvas: !!document.querySelector('#pv-canvas'),
-  })`));
+  })`),
+  );
 
   /* ---- 2. preview (mesh + textures) -------------------------------- */
   if (skipPreview) {
     out("previewStages", "skipped");
   } else {
-  const pvId = "selftest-preview";
-  const pvDone = waitForEvent(
-    (ev) => ev.id === pvId && (ev.type === "preview-done" || ev.type === "preview-error"),
-    20 * 60 * 1000
-  );
-  const stages = [];
-  ipcMain.on("sf-ev", function stageWatch(_e, ev) {
-    if (ev && ev.id === pvId && ev.type === "preview-glb") {
-      stages.push({ stage: ev.stage, bytes: ev.bytes, stats: ev.stats });
-    }
-  });
-  sendToWorker({ cmd: "preview", id: pvId, url, flags: { textures: true, useCache: true } });
-  const pvEnd = await pvDone;
-  out("previewStages", stages);
-  out("previewEnd", pvEnd);
-
+    const pvId = "selftest-preview";
+    const pvDone = waitForEvent(
+      (ev) =>
+        ev.id === pvId &&
+        (ev.type === "preview-done" || ev.type === "preview-error"),
+      20 * 60 * 1000,
+    );
+    const stages = [];
+    ipcMain.on("sf-ev", function stageWatch(_e, ev) {
+      if (ev && ev.id === pvId && ev.type === "preview-glb") {
+        stages.push({ stage: ev.stage, bytes: ev.bytes, stats: ev.stats });
+      }
+    });
+    sendToWorker({
+      cmd: "preview",
+      id: pvId,
+      url,
+      flags: { textures: true, useCache: true },
+    });
+    const pvEnd = await pvDone;
+    out("previewStages", stages);
+    out("previewEnd", pvEnd);
   }
 
   /* ---- 3. UI render check (three.js parsed the GLB) ---------------- */
@@ -1027,12 +1156,25 @@ async function runSelfTest(url) {
   const tmpDir = path.join(app.getPath("temp"), "sf-selftest");
   await fsp.mkdir(tmpDir, { recursive: true }).catch(() => {});
   const prevDesktop = store.getDesktop();
-  store.setDesktop({ saveMode: "auto", lastSaveDir: tmpDir, openFolderAfterSave: false });
+  store.setDesktop({
+    saveMode: "auto",
+    lastSaveDir: tmpDir,
+    openFolderAfterSave: false,
+  });
   const dl = skipDownload
     ? { ok: true, skipped: true }
-    : await performDownload({ url, flags: { textures: true, packMode: "full", devMode: false } });
+    : await performDownload({
+        url,
+        flags: { textures: true, packMode: "full", devMode: false },
+      });
   store.setDesktop(prevDesktop);
-  out("download", { ok: dl.ok, path: dl.path, bytes: dl.bytes, zipName: dl.zipName, error: dl.error });
+  out("download", {
+    ok: dl.ok,
+    path: dl.path,
+    bytes: dl.bytes,
+    zipName: dl.zipName,
+    error: dl.error,
+  });
   if (dl.ok && dl.path) {
     const st = await fsp.stat(dl.path).catch(() => null);
     out("zipOnDisk", st ? { size: st.size } : null);
@@ -1042,8 +1184,15 @@ async function runSelfTest(url) {
   if (!skipDownload) {
     const afterPath = path.join(tmpDir, "after-mode.zip");
     process.env.SF_TEST_SAVE_PATH = afterPath;
-    store.setDesktop({ saveMode: "after", lastSaveDir: tmpDir, openFolderAfterSave: false });
-    const dl2 = await performDownload({ url, flags: { textures: false, packMode: "full" } });
+    store.setDesktop({
+      saveMode: "after",
+      lastSaveDir: tmpDir,
+      openFolderAfterSave: false,
+    });
+    const dl2 = await performDownload({
+      url,
+      flags: { textures: false, packMode: "full" },
+    });
     delete process.env.SF_TEST_SAVE_PATH;
     store.setDesktop(prevDesktop);
     const st2 = dl2.ok ? await fsp.stat(dl2.path).catch(() => null) : null;
@@ -1060,10 +1209,16 @@ async function runSelfTest(url) {
   /* ---- 6. bulk queue driven through the real UI tab ------------------- */
   const bulkArg = process.argv.find((a) => a.startsWith("--selftest-bulk="));
   if (bulkArg && !skipDownload) {
-    const urls = bulkArg.slice("--selftest-bulk=".length).split(",").filter(Boolean);
+    const urls = bulkArg
+      .slice("--selftest-bulk=".length)
+      .split(",")
+      .filter(Boolean);
     const bulkDir = path.join(tmpDir, "bulk");
     await fsp.mkdir(bulkDir, { recursive: true }).catch(() => {});
-    const finish = waitForEvent((ev) => ev.type === "bulk-finish", 40 * 60 * 1000);
+    const finish = waitForEvent(
+      (ev) => ev.type === "bulk-finish",
+      40 * 60 * 1000,
+    );
     const started = await evalInUi(`(async () => {
       await window.sf.setDesktopPrefs({ bulkDir: ${JSON.stringify(bulkDir)}, openFolderAfterSave: false });
       document.getElementById('tab-bulk').click();
@@ -1108,16 +1263,20 @@ if (!app.requestSingleInstanceLock()) {
       "info",
       `start app=${app.getVersion()} electron=${process.versions.electron} ` +
         `chrome=${process.versions.chrome} platform=${process.platform}/${process.arch} ` +
-        `userData=${app.getPath("userData")} gpu=${app.getGPUFeatureStatus().gpu_compositing || "?"}`
+        `userData=${app.getPath("userData")} gpu=${app.getGPUFeatureStatus().gpu_compositing || "?"}`,
     );
     if (isWin) app.setAppUserModelId("com.seryi882.sketchfab-downloader");
     const selfTestArg = process.argv.find((a) => a.startsWith("--selftest="));
     if (selfTestArg) {
       const url = selfTestArg.slice("--selftest=".length);
-      setTimeout(() => runSelfTest(url).catch((e) => {
-        console.log(SF_TAG, "FAIL", e && e.stack ? e.stack : e);
-        app.exit(3);
-      }), 1200);
+      setTimeout(
+        () =>
+          runSelfTest(url).catch((e) => {
+            console.log(SF_TAG, "FAIL", e && e.stack ? e.stack : e);
+            app.exit(3);
+          }),
+        1200,
+      );
     }
     Menu.setApplicationMenu(null);
     registerProtocol();
@@ -1132,6 +1291,9 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.on("window-all-closed", () => {
+    // Normally the UI's close handler has already destroyed the worker. Keep
+    // this cleanup too for programmatic closes or future window changes.
+    closeWorkerWindow("all application windows closed");
     app.quit();
   });
 }

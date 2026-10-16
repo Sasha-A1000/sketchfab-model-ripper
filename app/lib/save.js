@@ -30,7 +30,7 @@ export async function saveZip(zipBytes, filename) {
             } else {
               resolve(id);
             }
-          }
+          },
         );
       });
       setTimeout(() => URL.revokeObjectURL(url), 120_000);

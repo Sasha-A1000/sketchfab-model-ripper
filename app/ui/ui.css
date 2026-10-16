@@ -99,13 +99,11 @@ body {
   letter-spacing: 0.2px;
 }
 .brand-ico {
+  display: block;
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  background: linear-gradient(135deg, var(--blue), var(--cyan));
-  display: grid;
-  place-items: center;
-  font-size: 14px;
+  object-fit: cover;
   box-shadow: 0 0 14px rgba(59, 130, 246, 0.45);
 }
 .brand-text {

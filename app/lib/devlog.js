@@ -46,8 +46,7 @@ export function formatSessionLog() {
       const ts = new Date(e.t).toISOString().slice(11, 23);
       const extra =
         e.data !== undefined
-          ? " " +
-            (typeof e.data === "string" ? e.data : safeJson(e.data))
+          ? " " + (typeof e.data === "string" ? e.data : safeJson(e.data))
           : "";
       return `${ts} [${e.level}] ${e.msg}${extra}`;
     })

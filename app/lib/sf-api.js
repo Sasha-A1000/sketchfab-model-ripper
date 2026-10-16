@@ -13,8 +13,9 @@ const UA = {
 export function extractUid(text) {
   if (!text) return null;
   const m =
-    text.match(/sketchfab\.com\/(?:3d-models\/[^/?#]+-|models\/)([a-f0-9]{32})/i) ||
-    text.match(/\b([a-f0-9]{32})\b/i);
+    text.match(
+      /sketchfab\.com\/(?:3d-models\/[^/?#]+-|models\/)([a-f0-9]{32})/i,
+    ) || text.match(/\b([a-f0-9]{32})\b/i);
   return m ? m[1].toLowerCase() : null;
 }
 
@@ -29,13 +30,19 @@ function browserHeaders(url) {
 }
 
 export async function fetchText(url) {
-  const resp = await fetch(url, { credentials: "omit", headers: browserHeaders(url) });
+  const resp = await fetch(url, {
+    credentials: "omit",
+    headers: browserHeaders(url),
+  });
   if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${url}`);
   return resp.text();
 }
 
 export async function fetchBytes(url) {
-  const resp = await fetch(url, { credentials: "omit", headers: browserHeaders(url) });
+  const resp = await fetch(url, {
+    credentials: "omit",
+    headers: browserHeaders(url),
+  });
   if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${url}`);
   return new Uint8Array(await resp.arrayBuffer());
 }
@@ -43,15 +50,16 @@ export async function fetchBytes(url) {
 export async function fetchViewerInfo(uid) {
   const embedUrl = `https://sketchfab.com/models/${uid}/embed`;
   const embedHtml = await fetchText(embedUrl);
-  let m = embedHtml.match(
-    /id="js-dom-data-prefetched-data"><!--([\s\S]*?)-->/
-  );
+  let m = embedHtml.match(/id="js-dom-data-prefetched-data"><!--([\s\S]*?)-->/);
   if (!m) {
     m = embedHtml.match(
-      /js-dom-data-prefetched-data[^>]*>\s*<!--([\s\S]*?)-->/
+      /js-dom-data-prefetched-data[^>]*>\s*<!--([\s\S]*?)-->/,
     );
   }
-  if (!m) throw new Error("Could not read public viewer data (private/deleted model?)");
+  if (!m)
+    throw new Error(
+      "Could not read public viewer data (private/deleted model?)",
+    );
   const raw = m[1].replace(/&#34;/g, '"');
   const data = JSON.parse(raw);
   let key = `/i/models/${uid}`;
@@ -93,7 +101,9 @@ export function parseViewerMaterials(info) {
     const getTexFormat = (channel) => {
       const c = ch[channel];
       const t = c && c.texture;
-      return t && t.internalFormat ? String(t.internalFormat).toUpperCase() : "";
+      return t && t.internalFormat
+        ? String(t.internalFormat).toUpperCase()
+        : "";
     };
     const getFactor = (channel, def) => {
       const c = ch[channel];
@@ -125,7 +135,8 @@ export function parseViewerMaterials(info) {
     const roughF = getFactor("RoughnessPBR", null);
     let roughnessFactor = 0.9;
     if (typeof roughF === "number") roughnessFactor = roughF;
-    else if (typeof glossF === "number") roughnessFactor = Math.max(0, Math.min(1, 1 - glossF));
+    else if (typeof glossF === "number")
+      roughnessFactor = Math.max(0, Math.min(1, 1 - glossF));
 
     const opacity = ch.Opacity || {};
     const alphaMask = ch.AlphaMask || {};
@@ -157,7 +168,8 @@ export function parseViewerMaterials(info) {
     const clearCoatOn = !!clearCoatCh.enable;
     const clearCoat = clearCoatOn
       ? {
-          factor: typeof clearCoatCh.factor === "number" ? clearCoatCh.factor : 1,
+          factor:
+            typeof clearCoatCh.factor === "number" ? clearCoatCh.factor : 1,
           roughness: getFactor("ClearCoatRoughness", 0),
           textureUid: getTex("ClearCoat"),
           normalTextureUid: getTex("ClearCoatNormalMap"),
@@ -167,9 +179,10 @@ export function parseViewerMaterials(info) {
 
     const sheenCh = ch.Sheen || {};
     const sheenOn = !!sheenCh.enable;
-    const sheenColor = Array.isArray(sheenCh.color) && sheenCh.color.length >= 3
-      ? sheenCh.color.slice(0, 3)
-      : [1, 1, 1];
+    const sheenColor =
+      Array.isArray(sheenCh.color) && sheenCh.color.length >= 3
+        ? sheenCh.color.slice(0, 3)
+        : [1, 1, 1];
     const sheen = sheenOn
       ? {
           colorFactor: sheenColor,
@@ -243,7 +256,10 @@ export function parseViewerMaterials(info) {
         texCoordUnits[uid] = t.texCoordUnit;
       }
       if (!(uid in textureWraps) && (t.wrapS || t.wrapT)) {
-        textureWraps[uid] = { wrapS: t.wrapS || "REPEAT", wrapT: t.wrapT || "REPEAT" };
+        textureWraps[uid] = {
+          wrapS: t.wrapS || "REPEAT",
+          wrapT: t.wrapT || "REPEAT",
+        };
       }
       /**
        * UV transform, when the channel carries a non-identity one.
@@ -254,12 +270,18 @@ export function parseViewerMaterials(info) {
        */
       const uvt = c.UVTransforms;
       if (uvt && !(uid in uvTransforms)) {
-        const scale = Array.isArray(uvt.scale) ? [uvt.scale[0], uvt.scale[1]] : [1, 1];
-        const offset = Array.isArray(uvt.offset) ? [uvt.offset[0], uvt.offset[1]] : [0, 0];
+        const scale = Array.isArray(uvt.scale)
+          ? [uvt.scale[0], uvt.scale[1]]
+          : [1, 1];
+        const offset = Array.isArray(uvt.offset)
+          ? [uvt.offset[0], uvt.offset[1]]
+          : [0, 0];
         const rotation = typeof uvt.rotation === "number" ? uvt.rotation : 0;
         const identity =
-          scale[0] === 1 && scale[1] === 1 &&
-          offset[0] === 0 && offset[1] === 0 &&
+          scale[0] === 1 &&
+          scale[1] === 1 &&
+          offset[0] === 0 &&
+          offset[1] === 0 &&
           rotation === 0;
         if (!identity) uvTransforms[uid] = { scale, offset, rotation };
       }
@@ -366,8 +388,13 @@ export function modelBinzUrls(info) {
  */
 export function animationUrls(info) {
   const order =
-    (info && info.options && info.options.animation && info.options.animation.order) || [];
-  const osgjsUrl = info && info.files && info.files[0] && info.files[0].osgjsUrl;
+    (info &&
+      info.options &&
+      info.options.animation &&
+      info.options.animation.order) ||
+    [];
+  const osgjsUrl =
+    info && info.files && info.files[0] && info.files[0].osgjsUrl;
   if (!order.length || !osgjsUrl) return [];
   const base = osgjsUrl.split("/files/")[0];
   if (!base || base === osgjsUrl) return [];
@@ -400,7 +427,9 @@ async function maybeGunzip(bytes) {
     throw new Error("no DecompressionStream");
   }
   const ds = new DecompressionStream("gzip");
-  const ab = await new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer();
+  const ab = await new Response(
+    new Blob([bytes]).stream().pipeThrough(ds),
+  ).arrayBuffer();
   return new Uint8Array(ab);
 }
 
@@ -430,7 +459,9 @@ export async function fetchAnimations(info, onProgress) {
     } catch (e) {
       // A missing clip costs the animation, not the model: keep going.
       if (onProgress) {
-        onProgress(`  animation ${short} unavailable: ${e && e.message ? e.message : e}`);
+        onProgress(
+          `  animation ${short} unavailable: ${e && e.message ? e.message : e}`,
+        );
       }
     }
   }
@@ -447,7 +478,7 @@ export function getDiterB(info) {
 export async function extractStaticKey(embedHtml, onProgress) {
   const urls = [
     ...new Set(
-      [...embedHtml.matchAll(/<script[^>]+src="([^"]+)"/g)].map((m) => m[1])
+      [...embedHtml.matchAll(/<script[^>]+src="([^"]+)"/g)].map((m) => m[1]),
     ),
   ].sort((a, b) => {
     const sa = a.includes("/static/builds/web/dist/") ? 0 : 1;
@@ -484,7 +515,7 @@ export async function extractStaticKey(embedHtml, onProgress) {
     }
     if (js.length < 200000) {
       const hexes = [...js.matchAll(/["']([0-9a-f]{40})(?:\\n)?["']/g)].map(
-        (x) => x[1].toLowerCase()
+        (x) => x[1].toLowerCase(),
       );
       const uniq = [...new Set(hexes)];
       if (uniq.length === 1) {
@@ -517,7 +548,8 @@ export async function extractStaticKey(embedHtml, onProgress) {
  * "descramble" an image that was never scrambled.
  */
 function readPk(tex, im) {
-  const own = im && Object.prototype.hasOwnProperty.call(im, "pk") ? im.pk : undefined;
+  const own =
+    im && Object.prototype.hasOwnProperty.call(im, "pk") ? im.pk : undefined;
   const raw = own === undefined ? tex && tex.pk : own;
   if (raw == null) return null;
   const n = typeof raw === "number" ? raw : Number(raw);
@@ -553,7 +585,10 @@ export function isDescramblable(im, texPk) {
 }
 
 function imageEdge(im) {
-  return Math.max(im && im.width ? im.width : 0, im && im.height ? im.height : 0);
+  return Math.max(
+    im && im.width ? im.width : 0,
+    im && im.height ? im.height : 0,
+  );
 }
 
 function scoreImage(im) {
@@ -651,7 +686,10 @@ export async function fetchTextures(uid, onProgress, opts) {
         const data = await resp.json();
         results = data.results || [];
         if (results.length) {
-          if (onProgress) onProgress(`Textures API: ${path.includes("optimized") ? "optimized" : "plain"} (${results.length})`);
+          if (onProgress)
+            onProgress(
+              `Textures API: ${path.includes("optimized") ? "optimized" : "plain"} (${results.length})`,
+            );
           break;
         }
       } catch (_) {}
@@ -672,7 +710,10 @@ export async function fetchTextures(uid, onProgress, opts) {
       if (!best || !best.url) return null;
 
       const tuid = String(tex.uid || "").toLowerCase();
-      let base = String(tex.name || `texture_${idx + 1}`).replace(/[^\w.\-]+/g, "_");
+      let base = String(tex.name || `texture_${idx + 1}`).replace(
+        /[^\w.\-]+/g,
+        "_",
+      );
       const urlPath = best.url.split("?")[0];
       let ext = "";
       const mExt = base.match(/\.(png|jpe?g|webp|gif)$/i);
@@ -685,9 +726,10 @@ export async function fetchTextures(uid, onProgress, opts) {
         base = base + ext;
       }
       if (usedNames.has(base.toLowerCase())) {
-        const stem = ext && base.toLowerCase().endsWith(ext)
-          ? base.slice(0, base.length - ext.length)
-          : base;
+        const stem =
+          ext && base.toLowerCase().endsWith(ext)
+            ? base.slice(0, base.length - ext.length)
+            : base;
         base = `${stem}_${tuid.slice(0, 8) || idx + 1}${ext}`;
       }
       usedNames.add(base.toLowerCase());
@@ -702,17 +744,24 @@ export async function fetchTextures(uid, onProgress, opts) {
         let bytes = await fetchBytes(best.url);
         if (!bytes || bytes.length < 32) return null;
         const isPng =
-          bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+          bytes[0] === 0x89 &&
+          bytes[1] === 0x50 &&
+          bytes[2] === 0x4e &&
+          bytes[3] === 0x47;
         const isJpg = bytes[0] === 0xff && bytes[1] === 0xd8;
         const isWebp =
-          bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46;
+          bytes[0] === 0x52 &&
+          bytes[1] === 0x49 &&
+          bytes[2] === 0x46 &&
+          bytes[3] === 0x46;
         if (!isPng && !isJpg && !isWebp) {
           if (onProgress) onProgress(`  skip non-image: ${base}`);
           return null;
         }
         let fromDescramble = false;
         if (pk != null && (best.width || 0) >= 64 && (best.height || 0) >= 64) {
-          if (onProgress) onProgress(`  descramble start pk=${pk} ${bytes.length} B`);
+          if (onProgress)
+            onProgress(`  descramble start pk=${pk} ${bytes.length} B`);
           try {
             const dec = await descrambleImageBytes(bytes, pk, onProgress);
             if (dec && dec.length > 64) {
@@ -724,7 +773,9 @@ export async function fetchTextures(uid, onProgress, opts) {
             }
           } catch (de) {
             if (onProgress) {
-              onProgress(`  descramble failed: ${de && de.message ? de.message : de}`);
+              onProgress(
+                `  descramble failed: ${de && de.message ? de.message : de}`,
+              );
             }
           }
         } else if (onProgress && pk == null) {
@@ -737,7 +788,8 @@ export async function fetchTextures(uid, onProgress, opts) {
         const fileNames = [];
         const addId = (id) => {
           const s = String(id || "").toLowerCase();
-          if (/^[a-f0-9]{32}$/.test(s) && imageUids.indexOf(s) === -1) imageUids.push(s);
+          if (/^[a-f0-9]{32}$/.test(s) && imageUids.indexOf(s) === -1)
+            imageUids.push(s);
         };
         addId(tuid);
         for (const im of tex.images || []) {
@@ -754,7 +806,7 @@ export async function fetchTextures(uid, onProgress, opts) {
           onProgress(
             `Texture ${done}/${total}: ${base} (${best.width || "?"}x${best.height || "?"}` +
               (pk != null ? `, pk=${pk}` : "") +
-              `)`
+              `)`,
           );
         }
         return {
@@ -779,7 +831,7 @@ export async function fetchTextures(uid, onProgress, opts) {
     }
     if (scrambledHints > 0 && onProgress) {
       onProgress(
-        `  NOTE: ${scrambledHints} texture(s) look unusually small for their resolution — Sketchfab may serve protected/preview maps for this model`
+        `  NOTE: ${scrambledHints} texture(s) look unusually small for their resolution — Sketchfab may serve protected/preview maps for this model`,
       );
     }
   } catch (e) {
@@ -789,10 +841,12 @@ export async function fetchTextures(uid, onProgress, opts) {
 }
 
 export function sanitizeName(name) {
-  return String(name || "model")
-    .replace(/[^\w\-]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 80) || "model";
+  return (
+    String(name || "model")
+      .replace(/[^\w\-]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 80) || "model"
+  );
 }
 
 function b64ToU8(b64) {
@@ -818,11 +872,15 @@ function captureBytes(cap) {
     return new Uint8Array(
       cap.data.buffer,
       cap.data.byteOffset,
-      cap.data.byteLength
+      cap.data.byteLength,
     );
   }
   // Cross-realm / serialized: {0:n,1:n,...} or number[]
-  if (cap.data && typeof cap.data === "object" && typeof cap.data.length === "number") {
+  if (
+    cap.data &&
+    typeof cap.data === "object" &&
+    typeof cap.data.length === "number"
+  ) {
     try {
       return Uint8Array.from(cap.data);
     } catch (_) {}
@@ -866,7 +924,7 @@ export function mergeCapturedTextures(apiTextures, captures, onProgress) {
       decodeFail++;
       if (onProgress) {
         onProgress(
-          `  skip capture (no bytes): uid=${c.uid || "?"} name=${c.name || "?"} keys=${Object.keys(c).join(",")}`
+          `  skip capture (no bytes): uid=${c.uid || "?"} name=${c.name || "?"} keys=${Object.keys(c).join(",")}`,
         );
       }
       continue;
@@ -896,7 +954,7 @@ export function mergeCapturedTextures(apiTextures, captures, onProgress) {
   if (onProgress) {
     onProgress(
       `  capture pool: ${pool.length} usable / ${caps.length} raw` +
-        (decodeFail ? ` (${decodeFail} failed decode)` : "")
+        (decodeFail ? ` (${decodeFail} failed decode)` : ""),
     );
   }
 
@@ -964,7 +1022,13 @@ export function mergeCapturedTextures(apiTextures, captures, onProgress) {
     }
     if (!cap && t.fileNames) {
       for (const fn of t.fileNames) {
-        const hit = byName.get(String(fn).toLowerCase()) || byUid.get(String(fn).replace(/\.(png|jpe?g|webp|gif)$/i, "").toLowerCase());
+        const hit =
+          byName.get(String(fn).toLowerCase()) ||
+          byUid.get(
+            String(fn)
+              .replace(/\.(png|jpe?g|webp|gif)$/i, "")
+              .toLowerCase(),
+          );
         if (hit && !isUsed(hit)) {
           cap = hit;
           how = "filename";
@@ -980,14 +1044,19 @@ export function mergeCapturedTextures(apiTextures, captures, onProgress) {
       }
     }
     // Size ONLY when this resolution is unique among API maps
-    if (!cap && t.width && t.height && (sizeCount.get(t.width + "x" + t.height) || 0) === 1) {
+    if (
+      !cap &&
+      t.width &&
+      t.height &&
+      (sizeCount.get(t.width + "x" + t.height) || 0) === 1
+    ) {
       cap =
         pool.find(
           (c) =>
             !isUsed(c) &&
             !c.scrambledHint &&
             c.width === t.width &&
-            c.height === t.height
+            c.height === t.height,
         ) || null;
       if (cap) how = "unique-size";
     }
@@ -1009,7 +1078,7 @@ export function mergeCapturedTextures(apiTextures, captures, onProgress) {
           onProgress(
             `  blit → ${t.originalName || bare} via ${how} (${cap.width || "?"}x${
               cap.height || "?"
-            }, ${data.length} B)`
+            }, ${data.length} B)`,
           );
         }
         continue;
@@ -1045,7 +1114,7 @@ export function mergeCapturedTextures(apiTextures, captures, onProgress) {
     extra++;
     if (onProgress) {
       onProgress(
-        `  + extra GPU capture ${fname} (${c.width || "?"}x${c.height || "?"}, ${data.length} B)`
+        `  + extra GPU capture ${fname} (${c.width || "?"}x${c.height || "?"}, ${data.length} B)`,
       );
     }
   }
@@ -1053,22 +1122,22 @@ export function mergeCapturedTextures(apiTextures, captures, onProgress) {
   const keptApi = Math.max(0, api.length - replaced);
   if (onProgress) {
     onProgress(
-      `WebGL merge: ${replaced} replaced, ${extra} extra, ${keptApi} API kept, ${out.length} total (pool ${pool.length}/${caps.length})`
+      `WebGL merge: ${replaced} replaced, ${extra} extra, ${keptApi} API kept, ${out.length} total (pool ${pool.length}/${caps.length})`,
     );
     if (unmatched.length) {
       onProgress(`  kept CDN (no matching blit): ${unmatched.join(", ")}`);
     }
     if (pool.length === 0 && caps.length > 0) {
       onProgress(
-        `  WARNING: ${caps.length} capture(s) arrived but bytes could not be decoded (messaging?)`
+        `  WARNING: ${caps.length} capture(s) arrived but bytes could not be decoded (messaging?)`,
       );
     } else if (replaced === 0 && extra === 0 && pool.length > 0) {
       onProgress(
-        `  WARNING: all ${pool.length} capture(s) flagged scrambled — GPU may not hold clean maps`
+        `  WARNING: all ${pool.length} capture(s) flagged scrambled — GPU may not hold clean maps`,
       );
     } else if (replaced === 0 && caps.length === 0) {
       onProgress(
-        `  WARNING: no GPU captures — protected CDN maps stay striped`
+        `  WARNING: no GPU captures — protected CDN maps stay striped`,
       );
     }
   }
@@ -1086,8 +1155,17 @@ export function mergeCapturedTextures(apiTextures, captures, onProgress) {
  * @returns {number[]|null} column-major 4x4, or null when there is nothing to do
  */
 export function viewerOrientation(info) {
-  const m = info && info.options && info.options.orientation && info.options.orientation.matrix;
-  if (!Array.isArray(m) || m.length !== 16 || !m.every((v) => Number.isFinite(v))) return null;
+  const m =
+    info &&
+    info.options &&
+    info.options.orientation &&
+    info.options.orientation.matrix;
+  if (
+    !Array.isArray(m) ||
+    m.length !== 16 ||
+    !m.every((v) => Number.isFinite(v))
+  )
+    return null;
   const I = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
   return m.every((v, i) => Math.abs(v - I[i]) < 1e-9) ? null : m.slice();
 }

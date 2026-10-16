@@ -30,12 +30,19 @@ export function coerceToUint8Array(data) {
   }
   // Cross-realm ArrayBuffer / typed array sometimes lose instanceof
   if (typeof data === "object") {
-    if (typeof data.byteLength === "number" && typeof data.slice === "function") {
+    if (
+      typeof data.byteLength === "number" &&
+      typeof data.slice === "function"
+    ) {
       try {
         return new Uint8Array(data);
       } catch (_) {}
     }
-    if (typeof data.length === "number" && data.length > 0 && typeof data[0] === "number") {
+    if (
+      typeof data.length === "number" &&
+      data.length > 0 &&
+      typeof data[0] === "number"
+    ) {
       try {
         return Uint8Array.from(data);
       } catch (_) {}
@@ -50,7 +57,11 @@ export function coerceToUint8Array(data) {
  * @param {{ onLog?: (entry: {level:string,msg:string,data?:any}) => void, devMode?: boolean }} [opts]
  * @returns {Promise<{zipName: string, name: string, author: string, hasGlb: boolean, fileCount: number, zipBytes: number, downloadId?: number, logText?: string, zip?: Uint8Array}>}
  */
-export function downloadModelInBackground(url, onProgress = () => {}, opts = {}) {
+export function downloadModelInBackground(
+  url,
+  onProgress = () => {},
+  opts = {},
+) {
   return new Promise((resolve, reject) => {
     let port;
     try {
@@ -86,7 +97,8 @@ export function downloadModelInBackground(url, onProgress = () => {}, opts = {})
 
       if (msg.type === "log") {
         try {
-          if (opts.onLog) opts.onLog(msg.entry || { level: "info", msg: msg.text });
+          if (opts.onLog)
+            opts.onLog(msg.entry || { level: "info", msg: msg.text });
         } catch (_) {}
         // Also mirror into progress line when dev
         if (opts.devMode && msg.entry?.msg) {
@@ -111,7 +123,7 @@ export function downloadModelInBackground(url, onProgress = () => {}, opts = {})
               downloadId: msg.downloadId,
               logText: msg.logText || "",
               savedByBackground: true,
-            })
+            }),
           );
           return;
         }
@@ -127,9 +139,9 @@ export function downloadModelInBackground(url, onProgress = () => {}, opts = {})
                   msg.zip && typeof msg.zip === "object"
                     ? Object.keys(msg.zip).slice(0, 8).join(",")
                     : "-"
-                }). ${msg.logText ? "See dev log." : "Enable Dev mode for details."}`
-              )
-            )
+                }). ${msg.logText ? "See dev log." : "Enable Dev mode for details."}`,
+              ),
+            ),
           );
           return;
         }
@@ -144,7 +156,7 @@ export function downloadModelInBackground(url, onProgress = () => {}, opts = {})
             zipBytes: zip.length,
             logText: msg.logText || "",
             savedByBackground: false,
-          })
+          }),
         );
         return;
       }
@@ -183,7 +195,11 @@ export function downloadModelInBackground(url, onProgress = () => {}, opts = {})
     if (opts.packMode === "glb" || opts.packMode === "full") {
       msg.packMode = opts.packMode;
     }
-    if (opts.maxTextureEdge === 0 || opts.maxTextureEdge === 2048 || opts.maxTextureEdge === 4096) {
+    if (
+      opts.maxTextureEdge === 0 ||
+      opts.maxTextureEdge === 2048 ||
+      opts.maxTextureEdge === 4096
+    ) {
       msg.maxTextureEdge = opts.maxTextureEdge;
     }
     port.postMessage(msg);

@@ -90,7 +90,12 @@ export function createPreview(canvas, opts = {}) {
   renderer.toneMappingExposure = 0.95;
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, FALLBACK_W / FALLBACK_H, 0.01, 20000);
+  const camera = new THREE.PerspectiveCamera(
+    45,
+    FALLBACK_W / FALLBACK_H,
+    0.01,
+    20000,
+  );
   camera.position.set(2.6, 1.9, 3.4);
 
   const controls = new OrbitControls(camera, canvas);
@@ -193,7 +198,8 @@ export function createPreview(canvas, opts = {}) {
 
     // fit on the binding axis (a wide diorama must not look tiny in a wide panel)
     const fovY = (camera.fov * Math.PI) / 180;
-    const fovX = 2 * Math.atan(Math.tan(fovY / 2) * Math.max(camera.aspect, 0.2));
+    const fovX =
+      2 * Math.atan(Math.tan(fovY / 2) * Math.max(camera.aspect, 0.2));
     const distY = size3.y / 2 / Math.sin(fovY / 2);
     const distX = size3.x / 2 / Math.sin(fovX / 2);
     const distZ = size3.z / 2 / Math.sin(fovY / 2);
@@ -230,7 +236,7 @@ export function createPreview(canvas, opts = {}) {
       }
       if (o.material) {
         (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) =>
-          mats.add(m.uuid)
+          mats.add(m.uuid),
         );
       }
     });

@@ -8,7 +8,9 @@
 
 function idiv(a, b) {
   if (!b) return 0;
-  return a * b >= 0 ? Math.trunc(a / b) : -Math.trunc(Math.abs(a) / Math.abs(b));
+  return a * b >= 0
+    ? Math.trunc(a / b)
+    : -Math.trunc(Math.abs(a) / Math.abs(b));
 }
 
 function modI(i, u) {
@@ -263,7 +265,9 @@ async function inflateZlib(src) {
     throw new Error("no DecompressionStream");
   }
   const ds = new DecompressionStream("deflate");
-  const ab = await new Response(new Blob([copyBuf(src)]).stream().pipeThrough(ds)).arrayBuffer();
+  const ab = await new Response(
+    new Blob([copyBuf(src)]).stream().pipeThrough(ds),
+  ).arrayBuffer();
   return new Uint8Array(ab);
 }
 
@@ -272,7 +276,9 @@ async function deflateZlib(src) {
     throw new Error("no CompressionStream");
   }
   const cs = new CompressionStream("deflate");
-  const ab = await new Response(new Blob([copyBuf(src)]).stream().pipeThrough(cs)).arrayBuffer();
+  const ab = await new Response(
+    new Blob([copyBuf(src)]).stream().pipeThrough(cs),
+  ).arrayBuffer();
   return new Uint8Array(ab);
 }
 
@@ -420,7 +426,11 @@ export async function decodePngRgba(bytes) {
     colorType === 6 ? 4 : colorType === 2 ? 3 : colorType === 4 ? 2 : 1;
   const raw = await inflateZlib(idat);
   const px = unfilter(raw, w, h, bpp);
-  return { rgba: toRgba(px, w, h, colorType, bitDepth, palette, trns), width: w, height: h };
+  return {
+    rgba: toRgba(px, w, h, colorType, bitDepth, palette, trns),
+    width: w,
+    height: h,
+  };
 }
 
 function chunk(type, data) {
@@ -440,7 +450,10 @@ export async function encodePngRgba(rgba, w, h) {
   const raw = new Uint8Array(h * (stride + 1));
   for (let y = 0; y < h; y++) {
     raw[y * (stride + 1)] = 0;
-    raw.set(rgba.subarray(y * stride, y * stride + stride), y * (stride + 1) + 1);
+    raw.set(
+      rgba.subarray(y * stride, y * stride + stride),
+      y * (stride + 1) + 1,
+    );
   }
   const ihdr = new Uint8Array(13);
   putU32be(ihdr, 0, w);
@@ -452,7 +465,9 @@ export async function encodePngRgba(rgba, w, h) {
   const cIHDR = chunk("IHDR", ihdr);
   const cIDAT = chunk("IDAT", idat);
   const cIEND = chunk("IEND", new Uint8Array(0));
-  const out = new Uint8Array(sig.length + cIHDR.length + cIDAT.length + cIEND.length);
+  const out = new Uint8Array(
+    sig.length + cIHDR.length + cIDAT.length + cIEND.length,
+  );
   let o = 0;
   out.set(sig, o);
   o += sig.length;

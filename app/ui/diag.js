@@ -9,7 +9,9 @@ window.addEventListener("error", (e) => {
   console.error("[sf-ui]", msg, (e && e.filename) || "", (e && e.lineno) || "");
 });
 window.addEventListener("unhandledrejection", (e) => {
-  const msg = "promise: " + String((e && e.reason && e.reason.message) || (e && e.reason));
+  const msg =
+    "promise: " +
+    String((e && e.reason && e.reason.message) || (e && e.reason));
   window.__uiErrors.push(msg);
   console.error("[sf-ui]", msg);
 });

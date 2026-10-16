@@ -1,27 +1,25 @@
 # Sketchfab Public Downloader — Desktop (Windows 10/11)
 
-**v1.0**
+**Версия desktop-приложения 1.0.0**
 
 **Language / Язык:** [English](README.md) | **Русский**
 
-Десктоп-версия расширения [sketchfab-downloader-extension](https://github.com/seryi882/sketchfab-downloader-extension)
-(Manifest V3, v1.0). **Тот же движок и тот же дизайн**, но это обычное приложение
-для Windows: вставили ссылку → справа собралось **3D-превью модели** → нажали
-«Скачать» → после сборки архива открывается **окно Проводника с выбором, куда
-сохранить файл**, а затем Проводник показывает готовый ZIP.
+Десктоп-версия основана на текущей ветке `main` расширения
+[seryi882/sketchfab-downloader-extension](https://github.com/seryi882/sketchfab-downloader-extension)
+(включая пайплайн ригов и анимаций; это не старый тег `v1.0`). **Тот же движок
+и тот же дизайн**, но это обычное приложение для Windows: вставили ссылку →
+справа собралось **3D-превью модели** → нажали «Скачать» → после сборки архива
+открывается **окно Проводника с выбором, куда сохранить файл**, а затем
+Проводник показывает готовый ZIP.
 
 Публичные модели Sketchfab → **glTF (`.glb`) ZIP**. Без аккаунта, без логина,
 без API-токена — статический ключ расшифровки берётся из живого вьюера
 автоматически.
 
-- 🧩 Полный функционал расширения v1.0 (меш, текстуры, дескрамбл, ORM, риг/анимации, массовая загрузка, dev-режим, EN/RU/ZH, светлая/тёмная тема)
+- 🧩 Пайплайн upstream main (меш, текстуры, дескрамбл, ORM, риги/анимации, массовая загрузка, dev-режим, EN/RU/ZH, светлая/тёмная тема)
 - 🎮 **3D-превью сбоку** — как в ModHUB: без интерфейса сайта, только модель, которую можно крутить
 - 📂 **Диалог сохранения в Проводнике** — выбираете папку и имя файла
-- 🖥️ Нативные установщик (NSIS) и portable `.exe`
-
-![Главное окно](docs/screenshot-main.png)
-
-![Настройки](docs/screenshot-settings.png)
+- 🖥️ Один portable `.exe` для Windows x64 — без установщика
 
 ---
 
@@ -37,10 +35,10 @@
 | Тексты/перехват WebGL | хуки страницы вьюера | не нужны: движок сам качает и дескраблит карты |
 | Тяжёлые модели | offscreen-документ | отдельное скрытое окно-воркер (тот же смысл) |
 
-Все прочие возможности идентичны: полный архив или **только GLB**, размеры
+Возможности основного пайплайна: полный архив или **только GLB**, размеры
 текстур (Оригинал / ≤2K / ≤4K), дескрамбл PNG/JPEG (в т.ч. 4K/8K), упаковка
 metal+roughness → **ORM**, скины/кости/анимации, `info.json`, `README.txt`,
-`download-log.txt` в dev-режиме, три языка интерфейса, две темы.
+`download-log.txt` в dev-режиме, три языка интерфейса и две темы.
 
 ---
 
@@ -77,16 +75,18 @@ metal+roughness → **ORM**, скины/кости/анимации, `info.json`
 
 ---
 
-## Установка
+## Запуск portable-сборки
 
-1. Скачайте **`Sketchfab-Public-Downloader-Setup-1.0.0-win-x64.exe`** (NSIS)
-   или portable-сборку `Sketchfab Public Downloader-portable-1.0.0.exe`.
-2. Запустите установщик → «Установить» (права администратора не требуются,
-   можно выбрать папку установки).
-3. Появятся ярлыки на рабочем столе и в меню «Пуск».
+Скачайте и запустите **`Sketchfab Public Downloader-portable-1.0.0-win32-x64.exe`**.
+Это один portable-файл, установщика и мастера установки нет. При запуске
+лаунчер может распаковывать файлы приложения во временную папку; настройки
+сохраняются в `%APPDATA%\Sketchfab Public Downloader`.
 
-> Файлы не подписаны код-сертификатом, поэтому SmartScreen может показать
+> Файл не подписан код-сертификатом, поэтому SmartScreen может показать
 > «Неизвестный издатель» → «Подробнее» → «Выполнить в любом случае».
+
+При распространении `.exe` обязательно приложите ссылку на публичный исходный
+репозиторий: <https://github.com/Sasha-A1000/sketchfab-portable-downloader>.
 
 ---
 
@@ -138,35 +138,31 @@ metal+roughness → **ORM**, скины/кости/анимации, `info.json`
 
 ---
 
-## Разработка
+## Разработка и сборка
 
-Требования: **Node.js 18+** (сборка проверялась на Node 20), Windows 10/11.
-
-```bash
-npm install          # electron + electron-builder
-npm start            # запуск приложения из исходников
-npm test             # (необязательно) движок: node tools/node-probe.mjs <url>
-```
-
-Полезные флаги (для отладки и скриншотов):
+Требования: **Node.js 22.12+** (Electron 44.8.0), npm и Windows 10/11 для
+запуска приложения. Portable-цель electron-builder можно собирать на
+поддерживаемой ОС.
 
 ```bash
-npm start -- "https://sketchfab.com/3d-models/…"     # открыть ссылку сразу
-npm start -- --tab=bulk                              # старт на вкладке
-npm start -- --selftest="<url>"                      # headless-проверка движка и превью
-npm start -- --shot=docs/shot.png --shot-delay=30000 # снять окно в PNG и выйти
+npm install                  # установка зафиксированных зависимостей
+npm start                    # запуск из исходников
+npm run dist:portable        # Windows x64 portable EXE → dist/
 ```
 
-Сборка `.exe` (запускать на Windows):
+`npm run dist` — псевдоним той же сборки; установщик не настраивается. В сборку
+явно входят `app/**/*` и `icons/**/*`, в том числе `app/lib/wasm/decrypt.wasm`.
+
+Флаги отладки:
 
 ```bash
-npm run dist              # NSIS-установщик + portable → папка dist/
-npm run dist:installer    # только установщик
-npm run dist:portable     # только portable
+npm start -- "https://sketchfab.com/3d-models/…"   # сразу открыть ссылку
+npm start -- --tab=bulk                            # открыть вкладку «Массовая»
+npm start -- --selftest="<url>"                    # самопроверка движка/превью
+npm start -- --shot=shot.png --shot-delay=30000    # сохранить PNG окна и выйти
 ```
 
-Иконки лежат в `res/` (`.ico` для Windows, `.png` для остальных платформ) и в
-`icons/`.
+Иконки приложения и Windows EXE находятся в `icons/`.
 
 ### Структура проекта
 
@@ -178,7 +174,7 @@ app/
 │   ├── preload-worker.js# мост окна-воркера (window.sfWorker)
 │   └── store.js         # настройки (chrome.storage.local-совместимо)
 ├── shim.js              # объект chrome.* для движка + sfnet-прокси запросов
-├── lib/                 # ⚠ ДВИЖОК ИЗ РАСШИРЕНИЯ (GPL-3.0), файлы 1:1
+├── lib/                 # ⚠ движок на базе upstream main (GPL-3.0) + desktop-адаптации
 │   ├── pipeline.js      # полный конвейер: вьюер → ключ → WASM → текстуры → GLB → ZIP
 │   ├── sf-api.js, decrypt.js, descramble.js, orm.js, osgjs2gltf.js, zip.js …
 │   └── wasm/decrypt.wasm
@@ -196,9 +192,11 @@ app/
 
 ### Отличия в реализации
 
-* `lib/*` — это **тот же код** из репозитория расширения (единственная правка:
-  `packOrmMaps` помечена `export`, чтобы превью собирало текстуры так же, как ZIP).
-  Поэтому все исправления движка из расширения переносятся сюда копированием.
+* `app/lib/**` основан на текущей ветке `main` расширения, а не на старом теге
+  `v1.0`. В desktop-версии добавлены строки интерфейса в `i18n.js`, а
+  `packOrmMaps` экспортируется из `pipeline.js` для повторного использования
+  при построении превью. Исходный JS отформатирован Prettier без намеренного
+  изменения поведения.
 * Запросы к `sketchfab.com` / `media.sketchfab.com` / `static.sketchfab.com`
   идут через внутренний протокол `sfnet://` (главный процесс добавляет
   Referer и заголовки CORS) — браузерные host-permissions в Electron недоступны.
@@ -231,13 +229,20 @@ app/
 
 ---
 
-## Лицензия и благодарности
+## Based on seryi882/sketchfab-downloader-extension (GPL-3.0)
 
-* Приложение распространяется под **GNU GPL v3.0** ([LICENSE](LICENSE)) — как и
-  расширение, движок которого здесь используется.
-* Движок, дизайн интерфейса, строки i18n: **sketchfab-downloader-extension**,
-  Copyright (C) 2026 seryi882 (GPL-3.0).
-* **three.js** r169 — MIT (см. `app/vendor/three/LICENSE`).
-* **Electron** — MIT.
+Движок и часть интерфейса происходят из текущей ветки `main` проекта
+[seryi882/sketchfab-downloader-extension](https://github.com/seryi882/sketchfab-downloader-extension),
+включая `lib/skin.js` и `lib/wasm/decrypt.wasm`. Desktop-оболочка и превью
+адаптируют код для Electron. Компоненты описаны в [NOTICE.md](NOTICE.md);
+неизменённый текст GNU GPL v3 находится в [LICENSE](LICENSE).
+
+* Приложение распространяется под **GNU GPL v3.0** ([LICENSE](LICENSE)).
+* Авторские права upstream-проекта: seryi882 (GPL-3.0).
+* **three.js** r169 — MIT (`app/vendor/three/LICENSE`).
+* **Electron** и **electron-builder** — MIT.
+
+При распространении готового `.exe` приложите ссылку на публичный репозиторий
+с исходниками: <https://github.com/Sasha-A1000/sketchfab-portable-downloader>.
 
 Copyright (C) 2026 seryi882

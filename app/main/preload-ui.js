@@ -81,8 +81,12 @@ window.sf = {
       filters: [{ name: "PNG image", extensions: ["png"] }],
     });
     if (!ask || !ask.ok) return { ok: false, canceled: true };
-    const written = await ipcRenderer.invoke("app:writeBinary", { path: ask.path, data });
-    if (written && written.ok) ipcRenderer.invoke("app:explorerReveal", written.path);
+    const written = await ipcRenderer.invoke("app:writeBinary", {
+      path: ask.path,
+      data,
+    });
+    if (written && written.ok)
+      ipcRenderer.invoke("app:explorerReveal", written.path);
     return written || { ok: false, error: "write failed" };
   },
 
@@ -104,10 +108,15 @@ window.sf = {
 window.sfDlg = {
   save: async (url, filename) => {
     try {
-      const ask = await ipcRenderer.invoke("app:askSavePath", { defaultName: filename });
+      const ask = await ipcRenderer.invoke("app:askSavePath", {
+        defaultName: filename,
+      });
       if (!ask || !ask.ok) return { ok: false, canceled: true };
       const buf = new Uint8Array(await (await fetch(url)).arrayBuffer());
-      const written = await ipcRenderer.invoke("app:writeBinary", { path: ask.path, data: buf });
+      const written = await ipcRenderer.invoke("app:writeBinary", {
+        path: ask.path,
+        data: buf,
+      });
       if (written && written.ok) {
         ipcRenderer.invoke("app:explorerReveal", written.path);
       }
