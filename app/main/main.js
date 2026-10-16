@@ -366,6 +366,15 @@ function createUiWindow() {
   };
   uiWin.on("resize", persistBounds);
   uiWin.on("move", persistBounds);
+  uiWin.on("close", () => {
+    if (workerWin && !workerWin.isDestroyed()) {
+      logLine(
+        "info",
+        "main window closing; force-closing hidden worker window",
+      );
+    }
+    closeWorkerWindow("main window closed");
+  });
   uiWin.on("closed", () => {
     uiWin = null;
   });
@@ -379,7 +388,7 @@ function createUiWindow() {
   });
   // F12 / Ctrl+Shift+I devtools, Ctrl+R reload
   // --shot=FILE [--shot-delay=MS] [--shot-js=CODE] : capture the window to PNG
-  // and exit — used to build the screenshots in docs/ headlessly.
+  // and exit — useful for headless UI smoke tests.
   const shotArg = process.argv.find((a) => a.startsWith("--shot="));
   if (shotArg) {
     const file = shotArg.slice("--shot=".length);
@@ -462,7 +471,7 @@ function createUiWindow() {
 function createWorkerWindow() {
   if (workerWin && !workerWin.isDestroyed()) return workerWin;
   workerReady = false;
-  workerWin = new BrowserWindow({
+  const win = new BrowserWindow({
     show: false,
     width: 1024,
     height: 768,
@@ -476,9 +485,10 @@ function createWorkerWindow() {
       backgroundThrottling: false,
     },
   });
-  workerWin.removeMenu();
+  workerWin = win;
+  win.removeMenu();
   if (process.argv.some((a) => a.startsWith("--selftest"))) {
-    workerWin.webContents.on(
+    win.webContents.on(
       "console-message",
       (_e, level, message, line, source) => {
         console.log(
@@ -486,25 +496,31 @@ function createWorkerWindow() {
         );
       },
     );
-    workerWin.webContents.on("render-process-gone", (_e, d) =>
+    win.webContents.on("render-process-gone", (_e, d) =>
       console.log("[worker] render-process-gone", JSON.stringify(d)),
     );
   }
-  workerWin.webContents.on("did-fail-load", (_e, code, desc, url) => {
+  win.webContents.on("did-fail-load", (_e, code, desc, url) => {
     logLine("error", `worker did-fail-load ${code} ${desc} ${url}`);
   });
   logLine("info", "loading worker window");
-  workerWin.loadURL(`${BUNDLE}worker/worker.html`);
-  workerWin.on("closed", () => {
+  win.loadURL(`${BUNDLE}worker/worker.html`);
+  win.on("closed", () => {
+    if (workerWin !== win) return;
     workerWin = null;
     workerReady = false;
+    workerQueue = [];
+    failAllWaiters("worker window closed");
   });
-  workerWin.webContents.on("render-process-gone", () => {
+  win.webContents.on("render-process-gone", () => {
+    if (workerWin !== win) return;
     workerReady = false;
     workerWin = null;
+    workerQueue = [];
     failAllWaiters("worker crashed");
+    win.destroy();
   });
-  return workerWin;
+  return win;
 }
 
 function sendToWorker(cmd) {
@@ -529,6 +545,20 @@ function failAllWaiters(message) {
     w.resolve({ ok: false, error: message });
   }
   waiters.clear();
+}
+
+/**
+ * The hidden pipeline window keeps Electron alive after the visible UI closes.
+ * Force-destroy it while quitting so window-all-closed can fire and the
+ * single-instance lock is released for the next launch.
+ */
+function closeWorkerWindow(reason = "application is closing") {
+  const win = workerWin;
+  workerWin = null;
+  workerReady = false;
+  workerQueue = [];
+  failAllWaiters(reason);
+  if (win && !win.isDestroyed()) win.destroy();
 }
 
 /**
@@ -1255,6 +1285,9 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.on("window-all-closed", () => {
+    // Normally the UI's close handler has already destroyed the worker. Keep
+    // this cleanup too for programmatic closes or future window changes.
+    closeWorkerWindow("all application windows closed");
     app.quit();
   });
 }
