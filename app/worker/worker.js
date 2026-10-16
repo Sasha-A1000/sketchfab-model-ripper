@@ -29,6 +29,8 @@ import { decryptBinzBytes, loadWasmBytes, outNameFor } from "../lib/decrypt.js";
 import { convertOsgjsToGlbFromFiles } from "../lib/osgjs2gltf.js";
 import { downloadModel, packOrmMaps } from "../lib/pipeline.js";
 import { formatSessionLog } from "../lib/devlog.js";
+import { jobFlagsFromPrefs } from "../lib/settings.js";
+import { cleanDescription } from "../lib/text.js";
 
 const W = window.sfWorker;
 
@@ -94,7 +96,7 @@ function metaFromInfo(info, uid) {
     license: license.label || license.fullname || license.fullName || "",
     licenseRequirements: license.requirements || "",
     publishedAt: src.publishedAt || "",
-    description: String(src.description || "").slice(0, 600),
+    description: cleanDescription(src.description, 600),
     viewerUrl: src.viewerUrl || `https://sketchfab.com/3d-models/${uid}`,
     downloadType: src.downloadType || "",
     restricted: !!src.isRestricted,
@@ -354,13 +356,7 @@ async function cmdDownload({ id, url, targetPath, flags = {} }) {
   emit({ type: "download-start", id, url, targetPath });
 
   const result = await downloadModel(url, (text) => progress(id, text), {
-    downloadTextures: flags.textures === true,
-    devMode: flags.devMode === true,
-    packMode: flags.packMode === "glb" ? "glb" : "full",
-    maxTextureEdge:
-      flags.maxTextureEdge === 2048 || flags.maxTextureEdge === 4096
-        ? flags.maxTextureEdge
-        : 0,
+    ...jobFlagsFromPrefs(flags),
     capturedTextures: [],
   });
 

@@ -4,6 +4,8 @@
  * when dev mode is on, overwritten each run).
  */
 
+import { loadPrefs, savePrefs } from "./settings.js";
+
 const MAX_LINES = 400;
 let session = [];
 let devModeCache = null;
@@ -11,8 +13,7 @@ let devModeCache = null;
 export async function isDevMode() {
   if (devModeCache !== null) return devModeCache;
   try {
-    const { sf_dev_mode } = await chrome.storage.local.get("sf_dev_mode");
-    devModeCache = !!sf_dev_mode;
+    devModeCache = (await loadPrefs()).devMode === true;
   } catch (_) {
     devModeCache = false;
   }
@@ -20,10 +21,11 @@ export async function isDevMode() {
 }
 
 export async function setDevMode(on) {
-  devModeCache = !!on;
   try {
-    await chrome.storage.local.set({ sf_dev_mode: devModeCache });
-  } catch (_) {}
+    devModeCache = (await savePrefs({ devMode: on === true })).devMode === true;
+  } catch (_) {
+    devModeCache = on === true;
+  }
   return devModeCache;
 }
 

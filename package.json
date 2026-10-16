@@ -9,6 +9,7 @@
   "main": "app/main/main.js",
   "scripts": {
     "start": "electron .",
+    "test": "node --test",
     "dist": "npm run dist:portable",
     "dist:portable": "electron-builder --win portable --x64"
   },
@@ -36,7 +37,9 @@
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },

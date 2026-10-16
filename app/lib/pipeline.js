@@ -25,7 +25,7 @@ import {
   textureBasename,
 } from "./osgjs2gltf.js";
 import { planOrm, packOrmTexture } from "./orm.js";
-import { GITHUB_URL, isDownloadTextures, loadPrefs } from "./settings.js";
+import { GITHUB_URL, loadPrefs } from "./settings.js";
 
 /**
  * Pack each material's separate metalness / roughness maps into one glTF ORM
@@ -141,7 +141,7 @@ const README_TXT = [
 /**
  * @param {string} pageUrl
  * @param {(msg:string)=>void} [onProgress]
- * @param {{ capturedTextures?: Array }} [options] - WebGL/page captures from content hook
+ * @param {{ textures?: boolean, devMode?: boolean, packMode?: 'full'|'glb', maxTextureEdge?: number, capturedTextures?: Array }} [options] - per-job overrides
  */
 export async function downloadModel(
   pageUrl,
@@ -251,17 +251,10 @@ export async function downloadModel(
           ? prefs.maxTextureEdge
           : 0;
     } catch (_) {}
-    if (
-      options.downloadTextures === true ||
-      options.downloadTextures === false
-    ) {
-      wantTextures = options.downloadTextures === true;
-    } else {
-      try {
-        wantTextures = (await isDownloadTextures()) === true;
-      } catch (_) {
-        wantTextures = false;
-      }
+    if (typeof options.textures === "boolean") {
+      // The worker passes the canonical `textures` flag. Without an explicit
+      // job override, the preference blob above remains the source of truth.
+      wantTextures = options.textures;
     }
     if (options.packMode === "glb" || options.packMode === "full") {
       packMode = options.packMode;
@@ -315,7 +308,7 @@ export async function downloadModel(
           (fromDec ? ` (${fromDec} descrambled)` : "") +
           (fromCap ? ` (${fromCap} GPU-decoded)` : ""),
       );
-    } else {
+    } else if (wantTextures) {
       step("  No public textures found (GLB will be untextured)");
     }
 

@@ -31,7 +31,7 @@ function detectUiLang() {
 }
 
 export const GITHUB_URL =
-  "https://github.com/seryi882/sketchfab-downloader-extension";
+  "https://github.com/Sasha-A1000/sketchfab-portable-downloader";
 
 export const DEFAULT_PREFS = {
   textures: false,
@@ -58,22 +58,11 @@ export function normalizePrefs(raw) {
 
 export async function loadPrefs() {
   try {
-    const stored = await chrome.storage.local.get([
-      KEY,
-      "sf_download_textures",
-      "sf_theme",
-      "sf_lang",
-      "sf_dev_mode",
-    ]);
+    const stored = await chrome.storage.local.get(KEY);
     if (stored[KEY] && typeof stored[KEY] === "object") {
       return normalizePrefs(stored[KEY]);
     }
-    return normalizePrefs({
-      textures: stored.sf_download_textures === true,
-      theme: stored.sf_theme,
-      lang: stored.sf_lang || detectUiLang(),
-      devMode: stored.sf_dev_mode === true,
-    });
+    return normalizePrefs({ lang: detectUiLang() });
   } catch (_) {
     return { ...DEFAULT_PREFS };
   }
@@ -82,13 +71,9 @@ export async function loadPrefs() {
 export async function savePrefs(partial) {
   const current = await loadPrefs();
   const next = normalizePrefs({ ...current, ...partial });
-  await chrome.storage.local.set({
-    [KEY]: next,
-    sf_download_textures: next.textures === true,
-    sf_theme: next.theme,
-    sf_lang: next.lang,
-    sf_dev_mode: next.devMode === true,
-  });
+  // sf_prefs is the only persisted settings object. The main-process store
+  // migrates legacy flat keys when it reads an older prefs.json.
+  await chrome.storage.local.set({ [KEY]: next });
   return next;
 }
 
@@ -145,7 +130,7 @@ export function prefsFromUi({
 export function jobFlagsFromPrefs(prefs) {
   const p = normalizePrefs(prefs);
   return {
-    downloadTextures: p.textures === true,
+    textures: p.textures === true,
     devMode: p.devMode === true,
     packMode: p.packMode,
     maxTextureEdge: p.maxTextureEdge,

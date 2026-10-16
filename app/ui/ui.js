@@ -304,6 +304,18 @@ function setPreviewBadge(text, cls) {
   el.pvBadge.className = "pv-badge" + (cls ? " " + cls : "");
 }
 
+async function setPreviewTextures(enabled) {
+  desktop = await window.sf.setDesktopPrefs({
+    previewTextures: enabled === true,
+  });
+  paintDesktopSettings();
+  if (currentUrl) {
+    runPreview(currentUrl).catch((e) =>
+      setPreviewState("error", e && e.message ? e.message : String(e)),
+    );
+  }
+}
+
 async function runPreview(url) {
   const target = normalizeUrl(url);
   if (!target) return;
@@ -849,13 +861,7 @@ el.pvFull.onclick = () => {
     : t(lang, "previewFullscreen");
   setTimeout(() => pv.resize(), 40);
 };
-el.pvTex.onchange = async () => {
-  desktop = await window.sf.setDesktopPrefs({
-    previewTextures: el.pvTex.checked,
-  });
-  paintDesktopSettings();
-  if (currentUrl && el.pvTex.checked) runPreview(currentUrl);
-};
+el.pvTex.onchange = () => setPreviewTextures(el.pvTex.checked);
 el.pvWire.onclick = () => {
   const on = !el.pvWire.classList.contains("active");
   el.pvWire.classList.toggle("active", on);
@@ -944,12 +950,8 @@ el.previewAutoToggle.onchange = async () => {
     previewAutoStart: el.previewAutoToggle.checked,
   });
 };
-el.previewTexToggle.onchange = async () => {
-  desktop = await window.sf.setDesktopPrefs({
-    previewTextures: el.previewTexToggle.checked,
-  });
-  paintDesktopSettings();
-};
+el.previewTexToggle.onchange = () =>
+  setPreviewTextures(el.previewTexToggle.checked);
 el.btnPickFolder.onclick = async () => {
   const res = await window.sf.pickFolder({ defaultPath: desktop.lastSaveDir });
   if (res && res.ok) {
@@ -983,7 +985,8 @@ el.bulkStop.onclick = async () => {
 };
 el.ghLink.onclick = (e) => {
   e.preventDefault();
-  window.sf.openExternal(el.ghUrl.textContent.trim());
+  const url = el.ghLink.href || el.ghUrl.dataset.url || "";
+  window.sf.openExternal(url);
 };
 
 /* ------------------------------------------------------------------ *
@@ -991,6 +994,13 @@ el.ghLink.onclick = (e) => {
  * ------------------------------------------------------------------ */
 async function init() {
   const info = await window.sf.info();
+  const projectUrl =
+    typeof info.githubUrl === "string" && /^https:\/\//i.test(info.githubUrl)
+      ? info.githubUrl
+      : "https://github.com/Sasha-A1000/sketchfab-portable-downloader";
+  el.ghLink.href = projectUrl;
+  el.ghUrl.dataset.url = projectUrl;
+  el.ghUrl.textContent = projectUrl.replace(/^https?:\/\//i, "");
   desktop = await window.sf.getDesktopPrefs();
   applied = await loadPrefs();
   lang = applied.lang;

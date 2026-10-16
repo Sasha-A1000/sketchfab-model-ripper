@@ -1,7 +1,9 @@
 /**
- * Simple EN/RU/ZH i18n for the extension UI.
- * Language is stored in chrome.storage.local under "sf_lang".
+ * Simple EN/RU/ZH i18n for the desktop UI.
+ * The selected language is stored with the other preferences in sf_prefs.
  */
+
+import { loadPrefs, savePrefs } from "./settings.js";
 
 export const LANGS = ["en", "ru", "zh"];
 
@@ -536,13 +538,9 @@ export const STRINGS = {
 
 export async function getLang() {
   try {
-    const stored = await chrome.storage.local.get(["sf_lang", "sf_prefs"]);
-    if (LANGS.includes(stored.sf_lang)) return stored.sf_lang;
-    if (stored.sf_prefs && LANGS.includes(stored.sf_prefs.lang)) {
-      return stored.sf_prefs.lang;
-    }
+    const prefs = await loadPrefs();
+    if (LANGS.includes(prefs.lang)) return prefs.lang;
   } catch (_) {}
-  // Browser UI language fallback
   try {
     const ui = (chrome.i18n && chrome.i18n.getUILanguage()) || "";
     const code = ui.toLowerCase();
@@ -560,7 +558,7 @@ export async function getLang() {
 export async function setLang(lang) {
   const v = LANGS.includes(lang) ? lang : "en";
   try {
-    await chrome.storage.local.set({ sf_lang: v });
+    await savePrefs({ lang: v });
   } catch (_) {}
   return v;
 }

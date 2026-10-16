@@ -32,7 +32,8 @@ const APP_ROOT = path.join(__dirname, ".."); // the app/ directory
 const SCHEME = "app";
 const BUNDLE = `${SCHEME}://bundle/`;
 const TITLE = "Sketchfab Public Downloader";
-const GPL_URL = "https://github.com/seryi882/sketchfab-downloader-extension";
+const PROJECT_URL =
+  "https://github.com/Sasha-A1000/sketchfab-portable-downloader";
 
 const isWin = process.platform === "win32";
 
@@ -654,7 +655,7 @@ ipcMain.handle("app:info", () => ({
   locale: app.getLocale(),
   userData: app.getPath("userData"),
   downloads: app.getPath("downloads"),
-  githubUrl: GPL_URL,
+  githubUrl: PROJECT_URL,
 }));
 
 ipcMain.handle("app:locale", () => app.getLocale());

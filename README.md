@@ -106,19 +106,19 @@ Preview** (Solid mode hides textures).
 
 | Setting | Default | When it applies |
 |---|---|---|
-| Download textures | Off | After "Apply settings"; the ZIP name then ends with `-textures` |
-| Dev mode | Off | After "Apply settings"; detailed log + `download-log.txt` in the ZIP |
-| Theme | Light | Immediately |
-| Language | System (EN / RU / ZH) | Immediately |
-| Archive | Full | Immediately; "GLB only" keeps `.glb`, `README.txt`, `info.json` |
-| Texture size | Original | Immediately; Original = largest map, ≤2K/≤4K only if chosen |
-| Save dialog | After download | Immediately |
-| Open Explorer | On | Immediately |
-| Auto-build preview | On | Immediately (otherwise use Rebuild) |
-| Preview textures | On | Immediately (≤ 1K per map) |
-| Save folder / bulk folder | Downloads | Chosen with a button |
+| Download textures (`sf_prefs.textures`) | Off | After **Apply settings**; ZIP name gets `-textures`; maps are embedded in the GLB and kept separately in Full mode |
+| Dev mode (`sf_prefs.devMode`) | Off | After **Apply settings**; detailed log + `download-log.txt` in the ZIP |
+| Theme (`sf_prefs.theme`) | Light | Immediately |
+| Language (`sf_prefs.lang`) | English (EN / RU / ZH) | Immediately |
+| Archive (`sf_prefs.packMode`) | Full | Immediately; **GLB only** keeps `.glb`, `README.txt`, `info.json` (enabled textures stay embedded in the GLB) |
+| Texture size (`sf_prefs.maxTextureEdge`) | Original | Immediately; `0` = original, `2048` / `4096` cap maps only when textures are on |
+| Save dialog (`desktop.saveMode`) | After download | Immediately; `after`, `before`, or `auto` (no dialog, save to the last folder) |
+| Open Explorer (`desktop.openFolderAfterSave`) | On | Immediately; affects the next completed save |
+| Auto-build preview (`desktop.previewAutoStart`) | On | Immediately; controls automatic preview when a link is entered |
+| Preview textures (`desktop.previewTextures`) | On | Immediately; changing it rebuilds the current preview (≤ 1K per map) |
+| Save folder (`desktop.lastSaveDir`) / bulk folder (`desktop.bulkDir`) | Downloads | Chosen with a button; the last save folder is remembered |
 
-Preferences live in `%APPDATA%\Sketchfab Public Downloader\prefs.json`.
+Preferences live in `%APPDATA%\Sketchfab Public Downloader\prefs.json`. Engine settings have one canonical `sf_prefs` object; Windows-only settings live in `desktop`. Older flat `sf_*` values and `desktop.askWhereToSave` are migrated on launch, preserving explicit `false` values. The old `none` save mode is normalized to `auto`.
 
 ---
 
@@ -138,6 +138,7 @@ on a supported host.
 
 ```bash
 npm install                 # install the pinned Electron/build dependencies
+npm test                    # mock tests for preferences, migration and descriptions
 npm start                   # run from source
 npm run dist:portable       # Windows x64 portable EXE → dist/
 ```
