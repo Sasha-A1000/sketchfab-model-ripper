@@ -1,6 +1,6 @@
 # Sketchfab Public Downloader — Desktop (Windows 10/11)
 
-**Application version 1.0.0**
+**Application version: [latest release](https://github.com/Sasha-A1000/sketchfab-portable-downloader/releases/latest)**
 
 **Language / Язык:** **English** | [Русский](README.ru.md)
 
@@ -72,7 +72,7 @@ discard it.
 
 ## Run the portable build
 
-Download and run **`Sketchfab Public Downloader-portable-1.0.0-win32-x64.exe`**.
+Download the portable exe from the **[latest release](https://github.com/Sasha-A1000/sketchfab-portable-downloader/releases/latest)** page and run it.
 It is a single-file portable build; there is no installer or setup wizard. The
 portable launcher may unpack application files into a temporary directory while
 it runs. Preferences remain in `%APPDATA%\Sketchfab Public Downloader`.
