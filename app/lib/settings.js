@@ -124,7 +124,14 @@ export function applyTheme(el, theme) {
   }
 }
 
-export function prefsFromUi({ texToggle, devToggle, theme, lang, packMode, maxTextureEdge }) {
+export function prefsFromUi({
+  texToggle,
+  devToggle,
+  theme,
+  lang,
+  packMode,
+  maxTextureEdge,
+}) {
   return normalizePrefs({
     textures: !!(texToggle && texToggle.checked),
     devMode: !!(devToggle && devToggle.checked),

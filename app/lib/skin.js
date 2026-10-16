@@ -50,7 +50,8 @@ const CHANNEL_PATHS = {
 /** @param {object} node @returns {object} flattened UserDataContainer values */
 export function readUserData(node) {
   const out = {};
-  const values = node && node.UserDataContainer && node.UserDataContainer.Values;
+  const values =
+    node && node.UserDataContainer && node.UserDataContainer.Values;
   if (!values) return out;
   for (const v of values) {
     if (!v || v.Name == null) continue;
@@ -65,7 +66,10 @@ export function stackedTRS(bone) {
   const callbacks = bone.UpdateCallbacks || [];
   let stack = null;
   for (const cb of callbacks) {
-    const update = cb && (cb["osgAnimation.UpdateBone"] || cb["osgAnimation.UpdateMatrixTransform"]);
+    const update =
+      cb &&
+      (cb["osgAnimation.UpdateBone"] ||
+        cb["osgAnimation.UpdateMatrixTransform"]);
     if (update && update.StackedTransforms) {
       stack = update.StackedTransforms;
       break;
@@ -113,9 +117,15 @@ export function decomposeMatrix(m) {
   if (det < 0) sx = -sx;
 
   const r = [
-    sx ? m[0] / sx : 0, sx ? m[1] / sx : 0, sx ? m[2] / sx : 0,
-    sy ? m[4] / sy : 0, sy ? m[5] / sy : 0, sy ? m[6] / sy : 0,
-    sz ? m[8] / sz : 0, sz ? m[9] / sz : 0, sz ? m[10] / sz : 0,
+    sx ? m[0] / sx : 0,
+    sx ? m[1] / sx : 0,
+    sx ? m[2] / sx : 0,
+    sy ? m[4] / sy : 0,
+    sy ? m[5] / sy : 0,
+    sy ? m[6] / sy : 0,
+    sz ? m[8] / sz : 0,
+    sz ? m[9] / sz : 0,
+    sz ? m[10] / sz : 0,
   ];
   const trace = r[0] + r[4] + r[8];
   let x;
@@ -195,7 +205,8 @@ export function collectSkeletons(osgjs, axisNode = null) {
     skeleton.bones.push(bone);
     // Names are unique per model in Sketchfab exports (they carry a numeric
     // suffix); first writer wins if a model ever breaks that.
-    if (bone.name && !boneByName.has(bone.name)) boneByName.set(bone.name, bone);
+    if (bone.name && !boneByName.has(bone.name))
+      boneByName.set(bone.name, bone);
     for (const child of json.Children || []) {
       if (!child || typeof child !== "object") continue;
       const sub = child["osgAnimation.Bone"] || child["osg.Bone"];
@@ -233,7 +244,9 @@ export function collectSkeletons(osgjs, axisNode = null) {
     for (const [key, value] of Object.entries(node)) {
       if (key === "osgAnimation.Bone" || key === "osg.Bone") continue;
       if (key === "osgAnimation.Skeleton" || key === "osg.Skeleton") {
-        const worldMatrix = hasMatrix(value) ? mat4Multiply(acc, value.Matrix) : acc;
+        const worldMatrix = hasMatrix(value)
+          ? mat4Multiply(acc, value.Matrix)
+          : acc;
         const skeleton = { json: value, roots: [], bones: [], worldMatrix };
         skeletons.push(skeleton);
         findRootBones(value.Children || [], skeleton, 0);
@@ -245,7 +258,11 @@ export function collectSkeletons(osgjs, axisNode = null) {
         walk(value.Children || [], depth + 1, worldMatrix);
         continue;
       }
-      walk(value, depth + 1, hasMatrix(value) ? mat4Multiply(acc, value.Matrix) : acc);
+      walk(
+        value,
+        depth + 1,
+        hasMatrix(value) ? mat4Multiply(acc, value.Matrix) : acc,
+      );
     }
   }
 
@@ -254,7 +271,8 @@ export function collectSkeletons(osgjs, axisNode = null) {
   // as if it were placement.
   function hasMatrix(value) {
     if (!value || typeof value !== "object") return false;
-    if (!Array.isArray(value.Matrix) || value.Matrix.length !== 16) return false;
+    if (!Array.isArray(value.Matrix) || value.Matrix.length !== 16)
+      return false;
     return value !== axisNode;
   }
 
@@ -308,13 +326,22 @@ function readRaw(bin, def, typeName, count) {
  * @param {boolean} compressed
  * @param {number} itemSize components per output item (1 time, 3 vec3, 4 quat)
  */
-export function decodeKeyframeArray(bin, part, userData, packed, compressed, itemSize) {
+export function decodeKeyframeArray(
+  bin,
+  part,
+  userData,
+  packed,
+  compressed,
+  itemSize,
+) {
   const encodedItemSize = part.ItemSize || 1;
   const typeName = Object.keys(part.Array)[0];
   const def = part.Array[typeName];
   const size = def.Size;
   const mode = userData.channel_mode || 0;
-  const prepend = !!(itemSize === 1 ? mode & MODE_PREPEND_TIME : mode & MODE_PREPEND_ORIGIN);
+  const prepend = !!(itemSize === 1
+    ? mode & MODE_PREPEND_TIME
+    : mode & MODE_PREPEND_ORIGIN);
 
   // When an origin is prepended the stream holds deltas from it, so the
   // decoded run lands one item in and the origin fills slot 0.
@@ -324,7 +351,8 @@ export function decodeKeyframeArray(bin, part, userData, packed, compressed, ite
   let raw = readRaw(bin, def, typeName, encodedItemSize * size);
 
   if (itemSize === 4 && mode & MODE_SPHERICAL) {
-    if (compressed) raw = deinterleave(raw, new Float32Array(raw.length), encodedItemSize);
+    if (compressed)
+      raw = deinterleave(raw, new Float32Array(raw.length), encodedItemSize);
     decodeSpherical(raw, body, itemSize, userData.epsilon, userData.nphi, true);
     if (prepend) {
       out[0] = userData.ox || 0;
@@ -346,7 +374,7 @@ export function decodeKeyframeArray(bin, part, userData, packed, compressed, ite
         body,
         [userData.bx || 0, userData.by || 0, userData.bz || 0],
         [userData.hx || 0, userData.hy || 0, userData.hz || 0],
-        itemSize
+        itemSize,
       );
     }
     if (prepend) {
@@ -388,13 +416,19 @@ export function decodeChannelCurve(bin, typeName, channel) {
     : CHANNEL_PATHS[String(channel.Name || "").toLowerCase()];
   if (!path) return null;
 
-
   const compressed = typeName.indexOf("Compressed") !== -1;
   const packed = typeName.indexOf("Packed") !== -1;
   const userData = readUserData(channel);
 
   const times = decodeKeyframeArray(bin, kf.Time, userData, packed, false, 1);
-  const values = decodeKeyframeArray(bin, kf.Key, userData, packed, compressed, itemSize);
+  const values = decodeKeyframeArray(
+    bin,
+    kf.Key,
+    userData,
+    packed,
+    compressed,
+    itemSize,
+  );
   if (!times.length || values.length < times.length * itemSize) return null;
 
   if (isQuat) normalizeQuaternions(values);
@@ -420,7 +454,10 @@ export function decodeChannelCurve(bin, typeName, channel) {
 export function stripNonIncreasingKeys(times, values, itemSize) {
   let repeats = false;
   for (let i = 1; i < times.length; i++) {
-    if (times[i] <= times[i - 1]) { repeats = true; break; }
+    if (times[i] <= times[i - 1]) {
+      repeats = true;
+      break;
+    }
   }
   if (!repeats) return { times, values, dropped: 0 };
 
@@ -429,7 +466,8 @@ export function stripNonIncreasingKeys(times, values, itemSize) {
   for (let i = 0; i < times.length; i++) {
     if (outTimes.length && times[i] <= outTimes[outTimes.length - 1]) {
       const base = outValues.length - itemSize;
-      for (let c = 0; c < itemSize; c++) outValues[base + c] = values[i * itemSize + c];
+      for (let c = 0; c < itemSize; c++)
+        outValues[base + c] = values[i * itemSize + c];
       continue;
     }
     outTimes.push(times[i]);
@@ -445,7 +483,12 @@ export function stripNonIncreasingKeys(times, values, itemSize) {
 /** Renormalise quaternions; accumulated deltas drift slightly. */
 export function normalizeQuaternions(values) {
   for (let i = 0; i < values.length; i += 4) {
-    const len = Math.hypot(values[i], values[i + 1], values[i + 2], values[i + 3]);
+    const len = Math.hypot(
+      values[i],
+      values[i + 1],
+      values[i + 2],
+      values[i + 3],
+    );
     if (!len) {
       values[i] = 0;
       values[i + 1] = 0;

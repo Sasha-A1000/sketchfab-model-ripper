@@ -49,7 +49,10 @@ function load() {
   try {
     const raw = fs.readFileSync(resolveFile(), "utf8");
     const parsed = JSON.parse(raw);
-    cache = { ...base, ...(parsed && typeof parsed === "object" ? parsed : {}) };
+    cache = {
+      ...base,
+      ...(parsed && typeof parsed === "object" ? parsed : {}),
+    };
     cache.desktop = { ...base.desktop, ...(cache.desktop || {}) };
   } catch (_) {
     cache = base;

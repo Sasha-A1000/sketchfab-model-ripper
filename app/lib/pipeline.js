@@ -41,8 +41,14 @@ import { GITHUB_URL, isDownloadTextures, loadPrefs } from "./settings.js";
  * @param {number} maxTextureEdge
  * @returns {Promise<Array>} textures, plus any packed ORM maps
  */
-export async function packOrmMaps(viewerMaterials, textures, step, maxTextureEdge) {
-  if (!viewerMaterials || !viewerMaterials.size || !textures.length) return textures;
+export async function packOrmMaps(
+  viewerMaterials,
+  textures,
+  step,
+  maxTextureEdge,
+) {
+  if (!viewerMaterials || !viewerMaterials.size || !textures.length)
+    return textures;
 
   // Resolve uids exactly the way the converter does, so a texture the
   // converter would bind is never one the packer failed to find.
@@ -76,7 +82,10 @@ export async function packOrmMaps(viewerMaterials, textures, step, maxTextureEdg
 
     const stem = String(plan.metalName || plan.roughName)
       .replace(/\.[^.]+$/, "")
-      .replace(/_(metallic|metalness|metal|roughness|rough|gloss|glossiness)$/i, "");
+      .replace(
+        /_(metallic|metalness|metal|roughness|rough|gloss|glossiness)$/i,
+        "",
+      );
     const outName = `textures/${stem}_ORM.png`;
 
     try {
@@ -100,12 +109,17 @@ export async function packOrmMaps(viewerMaterials, textures, step, maxTextureEdg
       spec.packedOrmName = `${stem}_ORM.png`;
       packed++;
     } catch (e) {
-      step(`  ORM pack failed for ${spec.name || "?"}: ${e && e.message ? e.message : e}`);
+      step(
+        `  ORM pack failed for ${spec.name || "?"}: ${e && e.message ? e.message : e}`,
+      );
     }
   }
 
   if (packed || reused) {
-    step(`  Packed ${packed} ORM map(s) from separate metal/rough maps` + (reused ? ` (${reused} shared)` : ""));
+    step(
+      `  Packed ${packed} ORM map(s) from separate metal/rough maps` +
+        (reused ? ` (${reused} shared)` : ""),
+    );
   }
   return added.length ? textures.concat(added) : textures;
 }
@@ -129,7 +143,11 @@ const README_TXT = [
  * @param {(msg:string)=>void} [onProgress]
  * @param {{ capturedTextures?: Array }} [options] - WebGL/page captures from content hook
  */
-export async function downloadModel(pageUrl, onProgress = () => {}, options = {}) {
+export async function downloadModel(
+  pageUrl,
+  onProgress = () => {},
+  options = {},
+) {
   const logLines = [];
   const step = (msg) => {
     const line = String(msg || "");
@@ -160,11 +178,12 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
     for (const spec of viewerMaterials.values()) {
       if (spec.skipMesh) skipCount++;
     }
-    if (skipCount) step(`  (${skipCount} glass/invisible material(s) will be skipped)`);
+    if (skipCount)
+      step(`  (${skipCount} glass/invisible material(s) will be skipped)`);
 
     if (!isBinzFormat(info)) {
       throw new Error(
-        "This model is not in the current encrypted .binz format (or is private)."
+        "This model is not in the current encrypted .binz format (or is private).",
       );
     }
 
@@ -193,7 +212,7 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
           continue;
         }
         throw new Error(
-          `Download ${binzName} failed: ${e && e.message ? e.message : e}`
+          `Download ${binzName} failed: ${e && e.message ? e.message : e}`,
         );
       }
       step(`Decrypting ${binzName} (${enc.length} bytes)…`);
@@ -202,7 +221,7 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
         plain = await decryptBinzBytes(wasmBytes, enc, diterB, staticKey);
       } catch (e) {
         throw new Error(
-          `Decrypt ${binzName} failed: ${e && e.message ? e.message : e}`
+          `Decrypt ${binzName} failed: ${e && e.message ? e.message : e}`,
         );
       }
       const outName = outNameFor(binzName);
@@ -212,7 +231,7 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
 
     if (!decrypted["file.osgjs"] || !decrypted["model_file.bin"]) {
       throw new Error(
-        `Missing file.osgjs or model_file.bin after decrypt. Have: ${Object.keys(decrypted).join(", ")}`
+        `Missing file.osgjs or model_file.bin after decrypt. Have: ${Object.keys(decrypted).join(", ")}`,
       );
     }
 
@@ -227,11 +246,15 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
       const prefs = await loadPrefs();
       wantTextures = prefs.textures === true;
       packMode = prefs.packMode === "glb" ? "glb" : "full";
-      maxTextureEdge = prefs.maxTextureEdge === 2048 || prefs.maxTextureEdge === 4096
-        ? prefs.maxTextureEdge
-        : 0;
+      maxTextureEdge =
+        prefs.maxTextureEdge === 2048 || prefs.maxTextureEdge === 4096
+          ? prefs.maxTextureEdge
+          : 0;
     } catch (_) {}
-    if (options.downloadTextures === true || options.downloadTextures === false) {
+    if (
+      options.downloadTextures === true ||
+      options.downloadTextures === false
+    ) {
       wantTextures = options.downloadTextures === true;
     } else {
       try {
@@ -253,7 +276,7 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
         (wantTextures ? "on" : "off") +
         " pack=" +
         packMode +
-        (maxTextureEdge ? " maxEdge=" + maxTextureEdge : " maxEdge=original")
+        (maxTextureEdge ? " maxEdge=" + maxTextureEdge : " maxEdge=original"),
     );
 
     let textures = [];
@@ -271,12 +294,17 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
         textures = mergeCapturedTextures(textures, captures, step);
       } else {
         step(
-          "  (No viewer-blit captures — reload the model page AFTER enabling the extension, wait for full load)"
+          "  (No viewer-blit captures — reload the model page AFTER enabling the extension, wait for full load)",
         );
       }
     }
     if (textures.length) {
-      textures = await packOrmMaps(viewerMaterials, textures, step, maxTextureEdge);
+      textures = await packOrmMaps(
+        viewerMaterials,
+        textures,
+        step,
+        maxTextureEdge,
+      );
     }
     for (const t of textures) decrypted[t.name] = t.data;
     if (textures.length) {
@@ -285,7 +313,7 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
       step(
         `  ${textures.length} texture(s) ready for GLB embed` +
           (fromDec ? ` (${fromDec} descrambled)` : "") +
-          (fromCap ? ` (${fromCap} GPU-decoded)` : "")
+          (fromCap ? ` (${fromCap} GPU-decoded)` : ""),
       );
     } else {
       step("  No public textures found (GLB will be untextured)");
@@ -300,7 +328,11 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
     let skippedGeometries = [];
     try {
       const result = await convertOsgjsToGlbFromFiles(
-        decrypted, viewerMaterials, textures, viewerOrientation(info));
+        decrypted,
+        viewerMaterials,
+        textures,
+        viewerOrientation(info),
+      );
       glb = result.glb;
       rig = result.rig || null;
       gltfExternal = result.gltfExternal || null;
@@ -310,7 +342,7 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
         (result.json && result.json.images && result.json.images.length) ||
         0;
       step(
-        `  GLB ready (${glb.length} bytes, ${geometryCount} mesh(es), ${textureEmbedCount} image(s) embedded)`
+        `  GLB ready (${glb.length} bytes, ${geometryCount} mesh(es), ${textureEmbedCount} image(s) embedded)`,
       );
       // A dropped mesh used to leave no trace at all, which is how three of
       // them went unnoticed until someone opened the file and saw a hole.
@@ -323,7 +355,7 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
           `  Rig: ${rig.skins} skin(s), ${rig.bones} bone(s) in ${rig.skeletons} skeleton(s)` +
             (rig.animations
               ? `; ${rig.animations} animation(s), ${rig.channels} channel(s)`
-              : "; no animation curves")
+              : "; no animation curves"),
         );
       }
       // Log material bindings for dev mode
@@ -332,8 +364,10 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
           const p = m.pbrMetallicRoughness || {};
           const bi = p.baseColorTexture && p.baseColorTexture.index;
           const imgName = (idx) => {
-            if (idx == null || !result.json.images || !result.json.textures) return "none";
-            const src = result.json.textures[idx] && result.json.textures[idx].source;
+            if (idx == null || !result.json.images || !result.json.textures)
+              return "none";
+            const src =
+              result.json.textures[idx] && result.json.textures[idx].source;
             const im = result.json.images[src];
             return (im && im.name) || "none";
           };
@@ -341,7 +375,7 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
           const via = (m.extras && m.extras.via) || "?";
           step(
             `  mat ${m.name}: metal=${p.metallicFactor} rough=${p.roughnessFactor}` +
-              ` albedo=${imgName(bi)} normal=${imgName(ni)} via=${via}`
+              ` albedo=${imgName(bi)} normal=${imgName(ni)} via=${via}`,
           );
         }
       }
@@ -349,7 +383,7 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
         step(
           wantTextures
             ? "  Also packing model.gltf + model.bin (external textures)"
-            : "  Also packing model.gltf + model.bin (mesh only)"
+            : "  Also packing model.gltf + model.bin (mesh only)",
         );
       }
       if (!geometryCount) {
@@ -357,7 +391,7 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
       }
     } catch (e) {
       step(
-        `  glTF convert failed: ${e && e.message ? e.message : e}; packaging raw mesh (no .glb)…`
+        `  glTF convert failed: ${e && e.message ? e.message : e}; packaging raw mesh (no .glb)…`,
       );
       glb = null;
     }
@@ -396,7 +430,7 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
         "Textures with no pk-descramble and no viewer-blit (public CDN, often striped):",
         ...missing.map(
           (t) =>
-            `  - ${t.originalName || t.name} uid=${t.uid || "?"} ${t.width || "?"}x${t.height || "?"}`
+            `  - ${t.originalName || t.name} uid=${t.uid || "?"} ${t.width || "?"}x${t.height || "?"}`,
         ),
         "",
         "Maps listed above could not be decoded (no API pk, decode failed).",
@@ -469,8 +503,8 @@ export async function downloadModel(pageUrl, onProgress = () => {}, options = {}
             : "GLB conversion failed; use file.osgjs + model_file.bin.",
         },
         null,
-        2
-      )
+        2,
+      ),
     );
     files.push({ name: "info.json", data: infoJson });
 

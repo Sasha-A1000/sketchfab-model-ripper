@@ -1,26 +1,24 @@
 # Sketchfab Public Downloader — Desktop (Windows 10/11)
 
-**v1.0**
+**Application version 1.0.0**
 
 **Language / Язык:** **English** | [Русский](README.ru.md)
 
-Desktop build of the [sketchfab-downloader-extension](https://github.com/seryi882/sketchfab-downloader-extension)
-(Manifest V3, v1.0). **Same engine, same design language** — but a real Windows
-app: paste a link → a **3D preview of the model builds on the right** → press
-Download → when the archive is ready the **Explorer save dialog asks where to
-put it**, and Explorer opens with the finished ZIP.
+Desktop build based on the current `main` branch of
+[seryi882/sketchfab-downloader-extension](https://github.com/seryi882/sketchfab-downloader-extension)
+(including its rig/animation pipeline; not the old `v1.0` tag). **Same engine,
+same design language** — but a real Windows app: paste a link → a **3D preview
+of the model builds on the right** → press Download → when the archive is ready
+the **Explorer save dialog asks where to put it**, and Explorer opens with the
+finished ZIP.
 
 Public Sketchfab models → **glTF (`.glb`) ZIP**. No account, no login, no API
 token — the decryption key is auto-extracted from the live viewer.
 
-- 🧩 Everything the v1.0 extension does (mesh, textures, descramble, ORM packing, rigs/animations, bulk queue, dev mode, EN/RU/ZH, light/dark theme)
+- 🧩 Upstream main-branch pipeline (mesh, textures, descramble, ORM packing, rigs/animations, bulk queue, dev mode, EN/RU/ZH, light/dark theme)
 - 🎮 **Side 3D preview** (ModHUB-style): the model alone, no site chrome, drag to rotate
 - 📂 **Explorer save dialog**, then Explorer reveals the saved file
-- 🖥️ NSIS installer + portable `.exe`
-
-![Main window](docs/screenshot-main.png)
-
-![Settings](docs/screenshot-settings.png)
+- 🖥️ Single-file Windows x64 portable `.exe` — no installer
 
 ---
 
@@ -34,10 +32,10 @@ token — the decryption key is auto-extracted from the live viewer.
 | Saving | browser download | **Explorer save dialog** (after/before download) + reveal in folder |
 | WebGL capture | content-script hooks | not needed: the engine fetches and descrambles maps itself |
 
-Everything else is identical: full archive or **GLB only**, texture size
+Core pipeline features include full archive or **GLB only**, texture size
 (Original / ≤2K / ≤4K), PNG/JPEG descramble (incl. 4K/8K), metal+roughness →
 **ORM**, skins/bones/animations, `info.json`, `README.txt`, `download-log.txt`
-in dev mode, three UI languages, two themes.
+in dev mode, three UI languages, and two themes.
 
 ---
 
@@ -72,16 +70,18 @@ discard it.
 
 ---
 
-## Install
+## Run the portable build
 
-1. Grab **`Sketchfab-Public-Downloader-Setup-1.0.0-win-x64.exe`** (NSIS) or the
-   portable `Sketchfab Public Downloader-portable-1.0.0.exe`.
-2. Run the installer → Install (no admin rights required, install folder is
-   selectable).
-3. Desktop and Start-menu shortcuts are created.
+Download and run **`Sketchfab Public Downloader-portable-1.0.0-win32-x64.exe`**.
+It is a single-file portable build; there is no installer or setup wizard. The
+portable launcher may unpack application files into a temporary directory while
+it runs. Preferences remain in `%APPDATA%\Sketchfab Public Downloader`.
 
-> The binaries are not code-signed, so SmartScreen may show "Unknown publisher"
+> The executable is not code-signed, so SmartScreen may show "Unknown publisher"
 > → More info → Run anyway.
+
+When redistributing the executable, include a link to this public source
+repository: <https://github.com/Sasha-A1000/sketchfab-portable-downloader>.
 
 ---
 
@@ -130,29 +130,29 @@ opens when the queue finishes. "Stop after current" interrupts the queue.
 
 ---
 
-## Development
+## Development and build
 
-Requirements: **Node.js 18+** (tested on 20), Windows 10/11.
-
-```bash
-npm install     # electron + electron-builder
-npm start       # run from source
-npm run dist    # Windows installer + portable build → dist/
-```
-
-Engine smoke test without any UI:
+Requirements: **Node.js 22.12+** (Electron 44.8.0), npm, and Windows 10/11 for
+running the application. The portable target can be built with electron-builder
+on a supported host.
 
 ```bash
-node tools/node-probe.mjs "https://sketchfab.com/3d-models/…" --textures
+npm install                 # install the pinned Electron/build dependencies
+npm start                   # run from source
+npm run dist:portable       # Windows x64 portable EXE → dist/
 ```
+
+`npm run dist` is an alias for the same portable-only build; no installer target
+is configured. The build explicitly packages `app/**/*` and `icons/**/*`,
+including `app/lib/wasm/decrypt.wasm`.
 
 Debug flags:
 
 ```bash
-npm start -- "https://sketchfab.com/3d-models/…"      # open a link right away
-npm start -- --tab=bulk                               # start on a tab
-npm start -- --selftest="<url>"                       # headless engine/preview check
-npm start -- --shot=docs/shot.png --shot-delay=30000  # capture the window, then exit
+npm start -- "https://sketchfab.com/3d-models/…"   # open a link right away
+npm start -- --tab=bulk                            # start on a tab
+npm start -- --selftest="<url>"                    # engine/preview self-test
+npm start -- --shot=shot.png --shot-delay=30000    # capture the window, then exit
 ```
 
 ### Project layout
@@ -161,7 +161,7 @@ npm start -- --shot=docs/shot.png --shot-delay=30000  # capture the window, then
 app/
 ├── main/                # windows, app:// + sfnet:// protocols, dialogs, Explorer, bulk queue
 ├── shim.js              # chrome.* stand-in for the engine + sfnet request proxy
-├── lib/                 # ⚠ ENGINE FROM THE EXTENSION (GPL-3.0), files kept 1:1
+├── lib/                 # ⚠ engine based on upstream main (GPL-3.0), plus desktop adaptations
 │   ├── pipeline.js      # viewer → key → WASM → textures → GLB → ZIP
 │   └── wasm/decrypt.wasm
 ├── worker/worker.js     # hidden window: probe / preview (2 stages) / download → file
@@ -175,9 +175,11 @@ the UI light — network and filesystem live in the main process.
 
 ### Implementation notes
 
-* `app/lib/*` is the **same code** as in the extension repository (the only edit:
-  `packOrmMaps` is exported so the preview packs ORM maps exactly like the ZIP).
-  Engine fixes from the extension can therefore be copied over file by file.
+* `app/lib/**` is based on the extension repository's current `main` branch,
+  not its older `v1.0` tag. The desktop adds translated UI strings in `i18n.js`
+  and exports `packOrmMaps` from `pipeline.js` so the preview can reuse it.
+  Engine changes are formatted with Prettier; formatting does not intentionally
+  alter runtime behavior.
 * Requests to `sketchfab.com` / `media.sketchfab.com` / `static.sketchfab.com`
   go through the internal `sfnet://` scheme (the main process adds the Referer
   and CORS headers) — Electron renderers have no host permissions.
@@ -209,13 +211,20 @@ For personal access to **public** viewer data. Respect
 
 ---
 
-## License & credits
+## Based on seryi882/sketchfab-downloader-extension (GPL-3.0)
 
-* This app is released under **GNU GPL v3.0** ([LICENSE](LICENSE)), like the
-  extension whose engine it embeds.
-* Engine, UI design and i18n strings: **sketchfab-downloader-extension**,
-  Copyright (C) 2026 seryi882 (GPL-3.0).
+The engine and parts of the UI originate from the current `main` branch of
+[seryi882/sketchfab-downloader-extension](https://github.com/seryi882/sketchfab-downloader-extension),
+including `lib/skin.js` and `lib/wasm/decrypt.wasm`. The desktop wrapper and
+preview adapt that code for Electron. See [NOTICE.md](NOTICE.md) for the
+component-level notes and [LICENSE](LICENSE) for the unmodified GNU GPL v3 text.
+
+* This app is distributed under **GNU GPL v3.0** ([LICENSE](LICENSE)).
+* Upstream project copyright: seryi882 (GPL-3.0).
 * **three.js** r169 — MIT (`app/vendor/three/LICENSE`).
-* **Electron** — MIT.
+* **Electron** and **electron-builder** — MIT.
+
+When sharing a built executable, include a link to this public repository:
+<https://github.com/Sasha-A1000/sketchfab-portable-downloader>.
 
 Copyright (C) 2026 seryi882

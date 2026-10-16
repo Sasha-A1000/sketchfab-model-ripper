@@ -246,7 +246,8 @@ function normalizeUrl(text) {
   if (!raw) return "";
   const uid = extractUid(raw);
   if (!uid) return "";
-  if (!/sketchfab\.com/i.test(raw)) return `https://sketchfab.com/3d-models/${uid}`;
+  if (!/sketchfab\.com/i.test(raw))
+    return `https://sketchfab.com/3d-models/${uid}`;
   return raw;
 }
 
@@ -279,7 +280,7 @@ function paintPreviewStats() {
         mats: lastGlbStats.materials || 0,
         imgs: lastGlbStats.images || lastGlbStats.textures || 0,
         faces: Number(lastGlbStats.faces || 0).toLocaleString(lang),
-      })
+      }),
     );
   } else if (lastThreeStats) {
     parts.push(
@@ -288,7 +289,7 @@ function paintPreviewStats() {
         mats: lastThreeStats.materials,
         imgs: 0,
         faces: lastThreeStats.tris.toLocaleString(lang),
-      })
+      }),
     );
   }
   if (lastGlbStats && lastGlbStats.mb) {
@@ -337,7 +338,9 @@ function onPreviewGlb(ev) {
   const stage = ev.stage === "textures" ? "textures" : "mesh";
   pvStageName = stage;
   setPreviewBadge(
-    stage === "textures" ? t(lang, "previewStageTex") : t(lang, "previewStageMesh")
+    stage === "textures"
+      ? t(lang, "previewStageTex")
+      : t(lang, "previewStageMesh"),
   );
   lastGlbStats = {
     ...(ev.stats || {}),
@@ -356,7 +359,9 @@ function onPreviewGlb(ev) {
         three: lastThreeStats,
       };
     })
-    .catch((e) => setPreviewState("error", (e && e.message) || "cannot render GLB"));
+    .catch((e) =>
+      setPreviewState("error", (e && e.message) || "cannot render GLB"),
+    );
 }
 
 /* ------------------------------------------------------------------ *
@@ -378,7 +383,8 @@ function fillModelCard(meta) {
   el.modelAuthor.textContent = `${t(lang, "by")}: ${meta.author || "—"}`;
   const bits = [];
   if (meta.faceCount) bits.push(`${meta.faceCount.toLocaleString(lang)} faces`);
-  if (meta.vertexCount) bits.push(`${meta.vertexCount.toLocaleString(lang)} verts`);
+  if (meta.vertexCount)
+    bits.push(`${meta.vertexCount.toLocaleString(lang)} verts`);
   if (meta.animationCount) bits.push(`${meta.animationCount} anim`);
   bits.push(`${meta.likeCount || 0} ★ · ${meta.viewCount || 0} views`);
   el.modelStats.textContent = bits.join(" · ");
@@ -448,10 +454,14 @@ async function startDownload() {
   if (busy) return;
   const url = normalizeUrl(el.urlInput.value);
   if (!url) {
-    setStatus(t(lang, el.urlInput.value.trim() ? "errBadUrl" : "errNoUrl"), "warn");
+    setStatus(
+      t(lang, el.urlInput.value.trim() ? "errBadUrl" : "errNoUrl"),
+      "warn",
+    );
     return;
   }
-  if (!desktop || !("saveMode" in desktop)) desktop = await window.sf.getDesktopPrefs();
+  if (!desktop || !("saveMode" in desktop))
+    desktop = await window.sf.getDesktopPrefs();
 
   liveLog = [];
   renderDevPanel();
@@ -480,9 +490,9 @@ async function startDownload() {
       setStatus(
         `✅ ${res.name || ""} — ${res.zipName || ""}\n${t(lang, "savedTo")} ${res.path}\n${t(
           lang,
-          "downloadDoneFolder"
+          "downloadDoneFolder",
         )}`,
-        "ok"
+        "ok",
       );
       appendLiveLog(`done ${res.zipName} → ${res.path} (${res.bytes} bytes)`);
       if (res.logText) {
@@ -582,7 +592,11 @@ async function startBulk() {
   el.bulkStart.disabled = true;
   el.bulkStop.disabled = false;
   el.bulkSummary.textContent = `${t(lang, "bulkDownloading")} 1 / ${urls.length}…`;
-  const res = await window.sf.bulkStart({ urls, dir, flags: jobFlagsFromPrefs(applied) });
+  const res = await window.sf.bulkStart({
+    urls,
+    dir,
+    flags: jobFlagsFromPrefs(applied),
+  });
   if (res && res.ok === false) {
     el.bulkSummary.textContent = res.error || "failed";
     el.bulkStart.disabled = false;
@@ -667,7 +681,8 @@ function applyStaticI18n() {
   el.pvRotate.textContent = t(lang, "previewRotate");
   el.pvReset.textContent = t(lang, "previewReset");
   el.pvShot.textContent = t(lang, "previewShot");
-  if (!pvStageName && !lastGlbStats) el.pvMsg.textContent = t(lang, "previewIdle");
+  if (!pvStageName && !lastGlbStats)
+    el.pvMsg.textContent = t(lang, "previewIdle");
 
   el.bulkLabel.textContent = t(lang, "bulkLabel");
   el.bulkLinks.placeholder = t(lang, "bulkPlaceholder");
@@ -763,7 +778,8 @@ el.tabSet.onclick = () => showTab("set");
 el.btnDl.onclick = () => startDownload();
 el.btnBulk.onclick = () => showTab("bulk");
 el.btnOpenSite.onclick = () => {
-  const url = (currentMeta && currentMeta.viewerUrl) || normalizeUrl(el.urlInput.value);
+  const url =
+    (currentMeta && currentMeta.viewerUrl) || normalizeUrl(el.urlInput.value);
   if (url) window.sf.openExternal(url);
 };
 
@@ -807,7 +823,9 @@ async function handleUrlChange({ force = false } = {}) {
   const meta = await probeMeta(url);
   if (meta) fillModelCard(meta);
   if (desktop.previewAutoStart !== false || force) {
-    runPreview(url).catch((e) => setPreviewState("error", e && e.message ? e.message : String(e)));
+    runPreview(url).catch((e) =>
+      setPreviewState("error", e && e.message ? e.message : String(e)),
+    );
   }
 }
 
@@ -826,11 +844,15 @@ el.pvRefresh.onclick = () => {
 el.pvFull.onclick = () => {
   const on = !el.previewCard.classList.contains("fullscreen");
   el.previewCard.classList.toggle("fullscreen", on);
-  el.pvFull.textContent = on ? t(lang, "previewExitFullscreen") : t(lang, "previewFullscreen");
+  el.pvFull.textContent = on
+    ? t(lang, "previewExitFullscreen")
+    : t(lang, "previewFullscreen");
   setTimeout(() => pv.resize(), 40);
 };
 el.pvTex.onchange = async () => {
-  desktop = await window.sf.setDesktopPrefs({ previewTextures: el.pvTex.checked });
+  desktop = await window.sf.setDesktopPrefs({
+    previewTextures: el.pvTex.checked,
+  });
   paintDesktopSettings();
   if (currentUrl && el.pvTex.checked) runPreview(currentUrl);
 };
@@ -902,7 +924,7 @@ el.btnSaveSettings.onclick = async () => {
     await applyJobPrefs();
     setStatus(t(lang, "settingsSaved"), "ok");
     appendLiveLog(
-      `applied textures=${pendingTex ? "on" : "off"} dev=${pendingDev ? "on" : "off"}`
+      `applied textures=${pendingTex ? "on" : "off"} dev=${pendingDev ? "on" : "off"}`,
     );
   } catch (e) {
     appliedOk = false;
@@ -913,13 +935,19 @@ el.btnSaveSettings.onclick = async () => {
 
 /* Windows-side options */
 el.openFolderToggle.onchange = async () => {
-  desktop = await window.sf.setDesktopPrefs({ openFolderAfterSave: el.openFolderToggle.checked });
+  desktop = await window.sf.setDesktopPrefs({
+    openFolderAfterSave: el.openFolderToggle.checked,
+  });
 };
 el.previewAutoToggle.onchange = async () => {
-  desktop = await window.sf.setDesktopPrefs({ previewAutoStart: el.previewAutoToggle.checked });
+  desktop = await window.sf.setDesktopPrefs({
+    previewAutoStart: el.previewAutoToggle.checked,
+  });
 };
 el.previewTexToggle.onchange = async () => {
-  desktop = await window.sf.setDesktopPrefs({ previewTextures: el.previewTexToggle.checked });
+  desktop = await window.sf.setDesktopPrefs({
+    previewTextures: el.previewTexToggle.checked,
+  });
   paintDesktopSettings();
 };
 el.btnPickFolder.onclick = async () => {
@@ -935,7 +963,9 @@ el.btnOpenFolder.onclick = () => {
 };
 el.btnOpenLogs.onclick = () => window.sf.openUserData();
 el.bulkPick.onclick = async () => {
-  const res = await window.sf.pickFolder({ defaultPath: desktop.bulkDir || desktop.lastSaveDir });
+  const res = await window.sf.pickFolder({
+    defaultPath: desktop.bulkDir || desktop.lastSaveDir,
+  });
   if (res && res.ok) {
     desktop = await window.sf.setDesktopPrefs({ bulkDir: res.dir });
     paintDesktopSettings();
@@ -986,7 +1016,7 @@ async function init() {
   el.langSwitch.appendChild(
     createLangSwitch(lang, async (code) => {
       await persistInstant({ lang: code });
-    })
+    }),
   );
 
   paintDesktopSettings();

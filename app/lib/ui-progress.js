@@ -4,7 +4,10 @@
  */
 export function progressFromMessage(msg) {
   const s = String(msg || "");
-  if (/^✅|Download ok|ZIP ready|done /i.test(s) && /ERROR/i.test(s) === false) {
+  if (
+    /^✅|Download ok|ZIP ready|done /i.test(s) &&
+    /ERROR/i.test(s) === false
+  ) {
     if (/ERROR/i.test(s)) return null;
   }
   if (/^✅/.test(s) || /ZIP ready|done /i.test(s)) return 100;

@@ -40,7 +40,11 @@ export function isPackedOrmName(filename) {
   const stem = stemOf(filename);
   if (!stem) return false;
   const packed = stem.replace(/[^a-z0-9]+/g, "");
-  if (/metallicroughness|metalroughness|metalrough|mrao|occlusionroughnessmetallic/.test(packed)) {
+  if (
+    /metallicroughness|metalroughness|metalrough|mrao|occlusionroughnessmetallic/.test(
+      packed,
+    )
+  ) {
     return true;
   }
   // "arm" (AO/Roughness/Metallic) is a real packing convention, but it is also
@@ -67,7 +71,11 @@ export function planOrm(spec, resolve, classify) {
   const roughName = s.roughnessUid ? res(s.roughnessUid) : null;
 
   // Sketchfab sometimes points MetalnessPBR at a colour/id map, not a mask.
-  if (metalName && typeof classify === "function" && classify(metalName) === "albedo") {
+  if (
+    metalName &&
+    typeof classify === "function" &&
+    classify(metalName) === "albedo"
+  ) {
     metalName = null;
   }
 
@@ -89,9 +97,14 @@ export function planOrm(spec, resolve, classify) {
   const sameUid =
     s.metalnessUid &&
     s.roughnessUid &&
-    String(s.metalnessUid).toLowerCase() === String(s.roughnessUid).toLowerCase();
+    String(s.metalnessUid).toLowerCase() ===
+      String(s.roughnessUid).toLowerCase();
   if (sameUid && metalName) {
-    return { action: "passthrough", texture: metalName, reason: "one texture on both channels" };
+    return {
+      action: "passthrough",
+      texture: metalName,
+      reason: "one texture on both channels",
+    };
   }
 
   // 2. Two distinct maps always need packing.
@@ -106,13 +119,21 @@ export function planOrm(spec, resolve, classify) {
     return pack("single-channel metal map (LUMINANCE)");
   }
   if (fmt === "RGB" || fmt === "RGBA") {
-    return { action: "passthrough", texture: metalName, reason: `packed metal texture (${fmt})` };
+    return {
+      action: "passthrough",
+      texture: metalName,
+      reason: `packed metal texture (${fmt})`,
+    };
   }
 
   // No format reported: fall back to the filename, then to packing, which is
   // the safe direction — a wrong passthrough restores the mirror bug.
   if (isPackedOrmName(metalName)) {
-    return { action: "passthrough", texture: metalName, reason: "name suggests packed ORM" };
+    return {
+      action: "passthrough",
+      texture: metalName,
+      reason: "name suggests packed ORM",
+    };
   }
   return pack("metal only");
 }
@@ -142,8 +163,12 @@ export function packOrmPixels(opts) {
   const ao = opts.ao || null;
   const invert = !!opts.invertRough;
   // Non-metal and fairly rough is the safe default for a missing channel.
-  const metalFallback = clamp255(opts.metalFallback != null ? opts.metalFallback : 0);
-  const roughFallback = clamp255(opts.roughFallback != null ? opts.roughFallback : 229);
+  const metalFallback = clamp255(
+    opts.metalFallback != null ? opts.metalFallback : 0,
+  );
+  const roughFallback = clamp255(
+    opts.roughFallback != null ? opts.roughFallback : 229,
+  );
 
   const out = new Uint8ClampedArray(n * 4);
   for (let i = 0; i < n; i++) {
@@ -173,16 +198,26 @@ function clamp255(v) {
  * @returns {Promise<{data: Uint8Array, width: number, height: number}>}
  */
 export async function packOrmTexture(sources) {
-  if (typeof createImageBitmap !== "function" || typeof OffscreenCanvas !== "function") {
+  if (
+    typeof createImageBitmap !== "function" ||
+    typeof OffscreenCanvas !== "function"
+  ) {
     throw new Error("ORM packing needs createImageBitmap + OffscreenCanvas");
   }
   const metalBmp = await decode(sources.metal);
   const roughBmp = await decode(sources.rough);
   if (!metalBmp && !roughBmp) throw new Error("ORM packing: no source maps");
 
-  const cap = sources.maxEdge && sources.maxEdge > 0 ? sources.maxEdge : Infinity;
-  const width = Math.max(1, Math.min(cap, Math.max(dim(metalBmp, "width"), dim(roughBmp, "width"))));
-  const height = Math.max(1, Math.min(cap, Math.max(dim(metalBmp, "height"), dim(roughBmp, "height"))));
+  const cap =
+    sources.maxEdge && sources.maxEdge > 0 ? sources.maxEdge : Infinity;
+  const width = Math.max(
+    1,
+    Math.min(cap, Math.max(dim(metalBmp, "width"), dim(roughBmp, "width"))),
+  );
+  const height = Math.max(
+    1,
+    Math.min(cap, Math.max(dim(metalBmp, "height"), dim(roughBmp, "height"))),
+  );
 
   const packed = packOrmPixels({
     metal: metalBmp ? resample(metalBmp, width, height) : null,

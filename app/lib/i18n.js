@@ -53,8 +53,10 @@ export const STRINGS = {
     by: "by",
     alreadyDownloading: "Already downloading…",
     uidLabel: "UID",
-    captureWaiting: "Viewer: hook ready — wait until the model is fully visible…",
-    captureNone: "Viewer: 0 decoded after dump (reload page, wait for full load)",
+    captureWaiting:
+      "Viewer: hook ready — wait until the model is fully visible…",
+    captureNone:
+      "Viewer: 0 decoded after dump (reload page, wait for full load)",
     captureCount: "Viewer blit: {n} decoded texture(s)",
     captureLastDump: "last dump {n}",
     captureDumping: "Collecting viewer-decoded textures…",
@@ -110,7 +112,8 @@ export const STRINGS = {
     optPack: "Archive",
     packGlb: "GLB only",
     packFull: "Full",
-    packHint: "GLB only is smaller. Full also keeps osgjs, model.gltf and loose maps.",
+    packHint:
+      "GLB only is smaller. Full also keeps osgjs, model.gltf and loose maps.",
     optTexSize: "Texture size",
     texSizeOrig: "Original",
     texSize2k: "≤ 2K",
@@ -119,7 +122,8 @@ export const STRINGS = {
       "Original always picks the largest map. 2K / 4K only apply when you choose them.",
     // ---- Desktop app (Windows) ----
     urlLabel: "Sketchfab model link",
-    urlPlaceholder: "https://sketchfab.com/3d-models/… (or paste a 32-char UID)",
+    urlPlaceholder:
+      "https://sketchfab.com/3d-models/… (or paste a 32-char UID)",
     btnPaste: "Paste",
     btnClear: "Clear",
     btnOpenOnSite: "Open on Sketchfab",
@@ -143,7 +147,8 @@ export const STRINGS = {
     previewRotate: "Auto-rotate",
     previewReset: "Reset view",
     previewShot: "Save PNG",
-    previewStats: "{meshes} mesh(es) · {mats} material(s) · {imgs} texture(s) · {faces} faces",
+    previewStats:
+      "{meshes} mesh(es) · {mats} material(s) · {imgs} texture(s) · {faces} faces",
     previewStatsGlb: "GLB {mb} MB",
     previewShotSaved: "Screenshot saved",
     saveModeLabel: "Save dialog",
@@ -164,16 +169,19 @@ export const STRINGS = {
     btnPickFolder: "Choose folder…",
     btnOpenFolder: "Open",
     bulkFolderLabel: "Folder for the archives",
-    bulkFolderHint: "Every finished archive goes there; Explorer opens when the queue ends.",
+    bulkFolderHint:
+      "Every finished archive goes there; Explorer opens when the queue ends.",
     bulkPickFolder: "Choose folder…",
     bulkOpenFolder: "Open folder",
     savedTo: "Saved:",
     downloadCanceled: "Save canceled",
     downloadDoneFolder: "Done — Explorer opened on the file.",
     downloadRunning: "Downloading…",
-    jobStatusDesktop: "Textures: {tex} · Dev: {dev} · Archive: {pack} · Size: {size}",
+    jobStatusDesktop:
+      "Textures: {tex} · Dev: {dev} · Archive: {pack} · Size: {size}",
     errNoUrl: "Paste a public Sketchfab model link first.",
-    errBadUrl: "That does not look like a Sketchfab model link (need a 32-char model UID).",
+    errBadUrl:
+      "That does not look like a Sketchfab model link (need a 32-char model UID).",
     readingMeta: "Reading model info…",
     stopQueue: "Stop after current",
   },
@@ -224,7 +232,8 @@ export const STRINGS = {
     alreadyDownloading: "Уже скачивается…",
     uidLabel: "UID",
     captureWaiting: "Viewer: хук готов — дождитесь полной загрузки модели…",
-    captureNone: "Viewer: 0 decoded после dump (перезагрузите, дождитесь модели)",
+    captureNone:
+      "Viewer: 0 decoded после dump (перезагрузите, дождитесь модели)",
     captureCount: "Viewer blit: decoded текстур: {n}",
     captureLastDump: "последний dump {n}",
     captureDumping: "Сбор decoded текстур из вьюера…",
@@ -279,7 +288,8 @@ export const STRINGS = {
     optPack: "Архив",
     packGlb: "Только GLB",
     packFull: "Полный",
-    packHint: "Только GLB меньше. Полный ещё кладёт osgjs, model.gltf и отдельные карты.",
+    packHint:
+      "Только GLB меньше. Полный ещё кладёт osgjs, model.gltf и отдельные карты.",
     optTexSize: "Размер текстур",
     texSizeOrig: "Оригинал",
     texSize2k: "≤ 2K",
@@ -288,11 +298,13 @@ export const STRINGS = {
       "Оригинал всегда берёт самую большую карту. 2K / 4K действуют только если их выбрать.",
     // ---- Десктоп-приложение (Windows) ----
     urlLabel: "Ссылка на модель Sketchfab",
-    urlPlaceholder: "https://sketchfab.com/3d-models/… (или вставьте UID из 32 символов)",
+    urlPlaceholder:
+      "https://sketchfab.com/3d-models/… (или вставьте UID из 32 символов)",
     btnPaste: "Вставить",
     btnClear: "Очистить",
     btnOpenOnSite: "Открыть на Sketchfab",
-    desktopTagline: "Десктоп-приложение · без аккаунта · авто-ключи · glTF (GLB)",
+    desktopTagline:
+      "Десктоп-приложение · без аккаунта · авто-ключи · glTF (GLB)",
     desktopHint:
       "Вставьте ссылку на публичную модель — 3D-превью соберётся справа. Папку выбираете при сохранении, Проводник открывается на готовом архиве.",
     previewTitle: "3D-превью",
@@ -312,7 +324,8 @@ export const STRINGS = {
     previewRotate: "Авто-вращение",
     previewReset: "Сброс камеры",
     previewShot: "Скриншот PNG",
-    previewStats: "Мешей: {meshes} · материалов: {mats} · текстур: {imgs} · полигонов: {faces}",
+    previewStats:
+      "Мешей: {meshes} · материалов: {mats} · текстур: {imgs} · полигонов: {faces}",
     previewStatsGlb: "GLB {mb} МБ",
     previewShotSaved: "Скриншот сохранён",
     saveModeLabel: "Окно сохранения",
@@ -333,16 +346,19 @@ export const STRINGS = {
     btnPickFolder: "Выбрать папку…",
     btnOpenFolder: "Открыть",
     bulkFolderLabel: "Папка для архивов",
-    bulkFolderHint: "Сюда попадут все архивы; Проводник откроется после конца очереди.",
+    bulkFolderHint:
+      "Сюда попадут все архивы; Проводник откроется после конца очереди.",
     bulkPickFolder: "Выбрать папку…",
     bulkOpenFolder: "Открыть папку",
     savedTo: "Сохранено:",
     downloadCanceled: "Сохранение отменено",
     downloadDoneFolder: "Готово — Проводник открыт на файле.",
     downloadRunning: "Скачивание…",
-    jobStatusDesktop: "Текстуры: {tex} · Dev: {dev} · Архив: {pack} · Размер: {size}",
+    jobStatusDesktop:
+      "Текстуры: {tex} · Dev: {dev} · Архив: {pack} · Размер: {size}",
     errNoUrl: "Сначала вставьте ссылку на публичную модель Sketchfab.",
-    errBadUrl: "Это не похоже на ссылку Sketchfab (нужен UID модели из 32 символов).",
+    errBadUrl:
+      "Это не похоже на ссылку Sketchfab (нужен UID модели из 32 символов).",
     readingMeta: "Читаю информацию о модели…",
     stopQueue: "Стоп после текущей",
   },
@@ -358,8 +374,7 @@ export const STRINGS = {
     modelDetected: "已检测到模型页面，请点击下载。",
     btnDownload: "下载此模型",
     btnBulk: "打开批量下载页面…",
-    popupHint:
-      "打开公共模型页面后，可从此弹窗或页面上的浮动面板开始下载。",
+    popupHint: "打开公共模型页面后，可从此弹窗或页面上的浮动面板开始下载。",
     working: "正在处理…",
     pageBusy: "页面脚本忙碌或不可用，正在从扩展弹窗下载…",
     retryPopup: "正在从扩展弹窗重试下载…",
@@ -394,7 +409,8 @@ export const STRINGS = {
     alreadyDownloading: "已有下载任务正在运行…",
     uidLabel: "UID",
     captureWaiting: "查看器：捕获钩子已就绪，请等待模型完全显示…",
-    captureNone: "查看器：转储后未获得已解码纹理（请刷新页面并等待模型完全加载）",
+    captureNone:
+      "查看器：转储后未获得已解码纹理（请刷新页面并等待模型完全加载）",
     captureCount: "查看器捕获：已解码 {n} 个纹理",
     captureLastDump: "上次转储 {n} 个",
     captureDumping: "正在收集查看器已解码的纹理…",
@@ -429,8 +445,7 @@ export const STRINGS = {
     tabSettings: "设置",
     settingsTitle: "设置",
     optTextures: "下载纹理",
-    optTexturesHint:
-      "关闭后只保存网格/glTF，速度更快，ZIP 中不包含贴图。",
+    optTexturesHint: "关闭后只保存网格/glTF，速度更快，ZIP 中不包含贴图。",
     optDevHint: "在“下载”标签页显示上次下载的详细日志。",
     texturesOn: "纹理已开启，将还原并打包贴图",
     texturesOff: "纹理已关闭，仅下载网格（速度更快）",
@@ -449,12 +464,14 @@ export const STRINGS = {
     optPack: "归档",
     packGlb: "仅 GLB",
     packFull: "完整归档",
-    packHint: "仅 GLB 占用空间更小；完整归档还会保留 osgjs、model.gltf 和独立贴图。",
+    packHint:
+      "仅 GLB 占用空间更小；完整归档还会保留 osgjs、model.gltf 和独立贴图。",
     optTexSize: "纹理尺寸",
     texSizeOrig: "原始尺寸",
     texSize2k: "≤ 2K",
     texSize4k: "≤ 4K",
-    texSizeHint: "原始尺寸始终选择最大贴图；只有手动选择时才会限制为 2K 或 4K。",
+    texSizeHint:
+      "原始尺寸始终选择最大贴图；只有手动选择时才会限制为 2K 或 4K。",
     // ---- 桌面版（Windows）----
     urlLabel: "Sketchfab 模型链接",
     urlPlaceholder: "https://sketchfab.com/3d-models/…（或粘贴 32 位 UID）",
@@ -495,7 +512,8 @@ export const STRINGS = {
     previewTexturesPref: "预览加载贴图（每张 ≤ 1K）",
     winSettingsTitle: "Windows 应用",
     logsLabel: "日志与设置",
-    logsHint: "应用会把 main.log（启动、错误、崩溃）写到这里。出现问题时可打开此文件夹并发送日志。",
+    logsHint:
+      "应用会把 main.log（启动、错误、崩溃）写到这里。出现问题时可打开此文件夹并发送日志。",
     btnOpenLogs: "打开日志文件夹",
     lastFolder: "保存文件夹",
     btnPickFolder: "选择文件夹…",
@@ -513,7 +531,6 @@ export const STRINGS = {
     errBadUrl: "这不像 Sketchfab 模型链接（需要 32 位模型 UID）。",
     readingMeta: "正在读取模型信息…",
     stopQueue: "当前完成后停止",
-
   },
 };
 

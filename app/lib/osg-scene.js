@@ -86,7 +86,24 @@ export function mat3FromMat4(m) {
 
 /** Widen a 3x3 to a 4x4 with no translation. */
 export function mat4FromMat3(m) {
-  return [m[0], m[1], m[2], 0, m[3], m[4], m[5], 0, m[6], m[7], m[8], 0, 0, 0, 0, 1];
+  return [
+    m[0],
+    m[1],
+    m[2],
+    0,
+    m[3],
+    m[4],
+    m[5],
+    0,
+    m[6],
+    m[7],
+    m[8],
+    0,
+    0,
+    0,
+    0,
+    1,
+  ];
 }
 
 export function mat3Transpose(m) {
@@ -109,9 +126,15 @@ export function mat3Invert(m) {
   if (!det || !Number.isFinite(det)) return null;
   const s = 1 / det;
   return [
-    A * s, (c * h - b * i) * s, (b * f - c * e) * s,
-    B * s, (a * i - c * g) * s, (c * d - a * f) * s,
-    C * s, (b * g - a * h) * s, (a * e - b * d) * s,
+    A * s,
+    (c * h - b * i) * s,
+    (b * f - c * e) * s,
+    B * s,
+    (a * i - c * g) * s,
+    (c * d - a * f) * s,
+    C * s,
+    (b * g - a * h) * s,
+    (a * e - b * d) * s,
   ];
 }
 
@@ -160,7 +183,8 @@ function isAxisWrapper(m) {
   const near = (a, b) => Math.abs(a - b) <= eps;
   if (!near(m[12], 0) || !near(m[13], 0) || !near(m[14], 0)) return false;
   // X is fixed: nothing shears into or out of the first axis.
-  if (!near(m[1], 0) || !near(m[2], 0) || !near(m[4], 0) || !near(m[8], 0)) return false;
+  if (!near(m[1], 0) || !near(m[2], 0) || !near(m[4], 0) || !near(m[8], 0))
+    return false;
   // The Y/Z block has to be k times a plane rotation.
   const c = m[5];
   const sn = m[6];
@@ -169,7 +193,6 @@ function isAxisWrapper(m) {
   // An identity wrapper converts nothing; leave the default to decide.
   return !(near(k, 1) && near(c, 1) && near(sn, 0));
 }
-
 
 /**
  * Sketchfab's coordinate-conversion wrapper, when the model has one.

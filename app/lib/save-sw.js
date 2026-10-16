@@ -22,9 +22,7 @@ function bytesToBase64(u8) {
  */
 export async function saveZipInServiceWorker(zipBytes, filename) {
   const bytes =
-    zipBytes instanceof Uint8Array
-      ? zipBytes
-      : new Uint8Array(zipBytes);
+    zipBytes instanceof Uint8Array ? zipBytes : new Uint8Array(zipBytes);
 
   if (!bytes.length) {
     throw new Error("ZIP is empty — nothing to save");
@@ -33,7 +31,7 @@ export async function saveZipInServiceWorker(zipBytes, filename) {
   // ~ chrome data-URL practical limit is large but memory-bound; guard huge files
   if (bytes.length > 90 * 1024 * 1024) {
     throw new Error(
-      `ZIP too large for SW data-URL save (${bytes.length} bytes). Try a smaller model.`
+      `ZIP too large for SW data-URL save (${bytes.length} bytes). Try a smaller model.`,
     );
   }
 
@@ -58,7 +56,7 @@ export async function saveZipInServiceWorker(zipBytes, filename) {
           return;
         }
         resolve(downloadId);
-      }
+      },
     );
   });
 

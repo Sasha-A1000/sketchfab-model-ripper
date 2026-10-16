@@ -136,7 +136,7 @@ async function decryptCore(url, id, useCache = true) {
 
   if (!isBinzFormat(info)) {
     throw new Error(
-      "This model is not in the current encrypted .binz format (or is private)."
+      "This model is not in the current encrypted .binz format (or is private).",
     );
   }
 
@@ -156,14 +156,16 @@ async function decryptCore(url, id, useCache = true) {
     let enc;
     try {
       enc = await new Uint8Array(
-        await (await fetch(binzUrl, { credentials: "omit" })).arrayBuffer()
+        await (await fetch(binzUrl, { credentials: "omit" })).arrayBuffer(),
       );
     } catch (e) {
       if (binzName.includes("wireframe")) {
         progress(id, `Skip ${binzName} (not available)`);
         continue;
       }
-      throw new Error(`Download ${binzName} failed: ${e && e.message ? e.message : e}`);
+      throw new Error(
+        `Download ${binzName} failed: ${e && e.message ? e.message : e}`,
+      );
     }
     progress(id, `Decrypting ${binzName} (${enc.length} bytes)…`);
     const plain = await decryptBinzBytes(wasmBytes, enc, diterB, staticKey);
@@ -175,13 +177,16 @@ async function decryptCore(url, id, useCache = true) {
   if (!decrypted["file.osgjs"] || !decrypted["model_file.bin"]) {
     throw new Error(
       `Missing file.osgjs or model_file.bin after decrypt. Have: ${Object.keys(
-        decrypted
-      ).join(", ")}`
+        decrypted,
+      ).join(", ")}`,
     );
   }
 
   try {
-    Object.assign(decrypted, await fetchAnimations(info, (m) => progress(id, m)));
+    Object.assign(
+      decrypted,
+      await fetchAnimations(info, (m) => progress(id, m)),
+    );
   } catch (_) {}
 
   const core = {
@@ -218,7 +223,8 @@ function statsOf(result, core, textureCount) {
     materials,
     images,
     textures: textureCount || 0,
-    animations: (rig && rig.animations) || (core.info && core.info.animationCount) || 0,
+    animations:
+      (rig && rig.animations) || (core.info && core.info.animationCount) || 0,
     bones: (rig && rig.bones) || 0,
     vertices: (core.info && core.info.vertexCount) || 0,
     faces: (core.info && core.info.faceCount) || 0,
@@ -232,7 +238,7 @@ async function buildPreviewGlb(core, id, textures) {
     core.decrypted,
     core.viewerMaterials,
     textures || [],
-    core.orientation
+    core.orientation,
   );
   if (!result || !result.glb || !result.glb.length) {
     throw new Error("GLB conversion returned nothing");
@@ -255,7 +261,12 @@ async function cmdPreview({ id, url, flags = {} }) {
     const core = await decryptCore(url, id, flags.useCache !== false);
 
     if (!flags.skipMeta) {
-      emit({ type: "preview-meta", id, url, meta: metaFromInfo(core.info, core.uid) });
+      emit({
+        type: "preview-meta",
+        id,
+        url,
+        meta: metaFromInfo(core.info, core.uid),
+      });
     }
 
     // ---- stage 1: mesh only (fast) ----
@@ -285,13 +296,13 @@ async function cmdPreview({ id, url, flags = {} }) {
             core.viewerMaterials,
             textures,
             (m) => progress(id, m),
-            PREVIEW_MAX_EDGE
+            PREVIEW_MAX_EDGE,
           );
         }
       } catch (e) {
         progress(
           id,
-          `Textures unavailable for preview (${e && e.message ? e.message : e}) — mesh preview kept`
+          `Textures unavailable for preview (${e && e.message ? e.message : e}) — mesh preview kept`,
         );
       }
       checkCanceled();
@@ -307,12 +318,21 @@ async function cmdPreview({ id, url, flags = {} }) {
           stats: statsOf(textured, core, textures.length),
         });
       } else {
-        emit({ type: "preview-note", id, text: "No public textures for preview" });
+        emit({
+          type: "preview-note",
+          id,
+          text: "No public textures for preview",
+        });
       }
     }
 
     emit({ type: "preview-done", id });
-    W.result(id, { ok: true, uid: core.uid, name: core.name, author: core.author });
+    W.result(id, {
+      ok: true,
+      uid: core.uid,
+      name: core.name,
+      author: core.author,
+    });
   } catch (e) {
     const message = e && e.message ? e.message : String(e);
     if (e && e.canceled) {
@@ -345,7 +365,9 @@ async function cmdDownload({ id, url, targetPath, flags = {} }) {
   });
 
   const zip =
-    result.zip instanceof Uint8Array ? result.zip : new Uint8Array(result.zip || []);
+    result.zip instanceof Uint8Array
+      ? result.zip
+      : new Uint8Array(result.zip || []);
   if (!zip.length) throw new Error("Pipeline returned an empty ZIP");
 
   progress(id, `Writing ${result.zipName} (${zip.length} bytes)…`);

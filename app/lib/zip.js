@@ -36,7 +36,8 @@ const CRC_TABLE = (() => {
 export function crc32(data) {
   let c = 0xffffffff;
   const u8 = data instanceof Uint8Array ? data : new Uint8Array(data);
-  for (let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xff] ^ (c >>> 8);
+  for (let i = 0; i < u8.length; i++)
+    c = CRC_TABLE[(c ^ u8[i]) & 0xff] ^ (c >>> 8);
   return (c ^ 0xffffffff) >>> 0;
 }
 
@@ -45,7 +46,9 @@ export async function deflateRaw(data) {
   if (typeof CompressionStream === "function") {
     try {
       const cs = new CompressionStream("deflate-raw");
-      const ab = await new Response(new Blob([u8]).stream().pipeThrough(cs)).arrayBuffer();
+      const ab = await new Response(
+        new Blob([u8]).stream().pipeThrough(cs),
+      ).arrayBuffer();
       return new Uint8Array(ab);
     } catch (_) {}
   }

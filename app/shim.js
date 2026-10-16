@@ -9,7 +9,11 @@
  * Must be imported BEFORE any app/lib module.
  */
 (function installChromeShim() {
-  if (typeof globalThis.chrome === "object" && globalThis.chrome && globalThis.chrome.storage) {
+  if (
+    typeof globalThis.chrome === "object" &&
+    globalThis.chrome &&
+    globalThis.chrome.storage
+  ) {
     return;
   }
   const bridge = globalThis.sfWorker || globalThis.sf || {};
@@ -50,8 +54,15 @@
         const clean = String(rel || "").replace(/^\/+/, "");
         return new URL("../" + clean, location.href).href;
       },
-      onMessage: { addListener() {}, removeListener() {}, hasListener: () => false },
-      sendMessage: async () => ({ ok: false, error: "no background worker in desktop app" }),
+      onMessage: {
+        addListener() {},
+        removeListener() {},
+        hasListener: () => false,
+      },
+      sendMessage: async () => ({
+        ok: false,
+        error: "no background worker in desktop app",
+      }),
       connect() {
         throw new Error("runtime ports are not available in the desktop app");
       },

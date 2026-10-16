@@ -2,9 +2,46 @@
   "name": "sketchfab-public-downloader-desktop",
   "productName": "Sketchfab Public Downloader",
   "version": "1.0.0",
-  "description": "Desktop (Windows) build of the Sketchfab Public Downloader extension: public Sketchfab models → glTF (GLB) ZIP, with a 3D preview panel and an Explorer save dialog.",
-  "author": "seryi882",
-  "license": "GPL-3.0-or-later",
+  "description": "Desktop build of the Sketchfab Public Downloader: public models to glTF (GLB) ZIP, with a 3D preview and Windows save dialog.",
+  "author": "Sasha-A1000 (upstream extension by seryi882)",
+  "license": "GPL-3.0-only",
   "private": true,
-  "main": "app/main/main.js"
+  "main": "app/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "npm run dist:portable",
+    "dist:portable": "electron-builder --win portable --x64"
+  },
+  "devDependencies": {
+    "electron": "44.8.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.seryi882.sketchfab-downloader",
+    "productName": "Sketchfab Public Downloader",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "app/**/*",
+      "icons/**/*",
+      "LICENSE",
+      "NOTICE.md",
+      "README.md",
+      "README.ru.md"
+    ],
+    "win": {
+      "icon": "icons/app.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "${productName}-portable-${version}-win32-${arch}.${ext}"
+    }
+  }
 }
