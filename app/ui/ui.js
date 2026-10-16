@@ -1011,7 +1011,7 @@ async function init() {
         ? "macOS"
         : "Linux";
   el.appPaths.textContent = `${info.platform} · Electron ${info.electron} · ${info.userData}`;
-  el.footerState.textContent = `${info.platform} · Chrome ${info.chrome}`;
+  el.footerState.textContent = `${info.platform} - Chrome ${info.chrome}`;
 
   el.langSwitch.appendChild(
     createLangSwitch(lang, async (code) => {
