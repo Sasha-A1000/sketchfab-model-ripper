@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' app:; script-src 'self' app:; connect-src sfnet: app: https://sketchfab.com https://*.sketchfab.com https://media.sketchfab.com https://static.sketchfab.com; img-src app: data: https://media.sketchfab.com https://static.sketchfab.com; style-src 'self' 'unsafe-inline' app:;"
+    />
+    <title>sf worker</title>
+  </head>
+  <body>
+    <!-- Hidden pipeline worker: decrypt, descramble, convert, zip, write.
+         Same role the extension gave to its offscreen document. -->
+    <script type="module" src="./worker.js"></script>
+  </body>
+</html>

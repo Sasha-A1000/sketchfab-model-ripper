@@ -1,0 +1,10 @@
+{
+  "name": "sketchfab-public-downloader-desktop",
+  "productName": "Sketchfab Public Downloader",
+  "version": "1.0.0",
+  "description": "Desktop (Windows) build of the Sketchfab Public Downloader extension: public Sketchfab models → glTF (GLB) ZIP, with a 3D preview panel and an Explorer save dialog.",
+  "author": "seryi882",
+  "license": "GPL-3.0-or-later",
+  "private": true,
+  "main": "app/main/main.js"
+}

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' app:; script-src 'self' app:; style-src 'self' 'unsafe-inline' app:; img-src 'self' app: data: blob: https://media.sketchfab.com https://static.sketchfab.com; connect-src 'self' app: sfnet: data: blob: https://sketchfab.com https://*.sketchfab.com https://media.sketchfab.com https://static.sketchfab.com; font-src 'self' app:;"
+    />
+    <title>Sketchfab Public Downloader</title>
+    <link rel="stylesheet" href="./ui.css" />
+  </head>
+  <body>
+    <!-- ======================= title bar ======================= -->
+    <header class="appbar">
+      <div class="brand">
+        <span class="brand-ico">⬇</span>
+        <span class="brand-text">
+          <span id="title">Sketchfab Public Downloader</span>
+          <span class="brand-sub" id="tagline">No account · Auto keys · glTF (GLB)</span>
+        </span>
+      </div>
+      <div class="appbar-actions">
+        <span class="pill-ver"><span id="ver">v1.0.0</span> · <span id="plat">Windows</span></span>
+        <div id="lang-switch"></div>
+      </div>
+    </header>
+
+    <!-- ======================= tabs ======================= -->
+    <nav class="tabs" role="tablist">
+      <button id="tab-dl" class="tab active" type="button" role="tab" aria-selected="true">
+        Download
+      </button>
+      <button id="tab-bulk" class="tab" type="button" role="tab" aria-selected="false">
+        Bulk
+      </button>
+      <button id="tab-set" class="tab" type="button" role="tab" aria-selected="false">
+        Settings
+      </button>
+    </nav>
+
+    <main>
+      <!-- ======================= DOWNLOAD ======================= -->
+      <section id="pane-dl" class="pane active">
+        <div class="grid">
+          <div class="col-left">
+            <!-- link -->
+            <div class="card">
+              <label class="cap" id="url-label" for="url-input">Sketchfab model link</label>
+              <div class="url-row">
+                <input
+                  id="url-input"
+                  class="url-input"
+                  type="text"
+                  spellcheck="false"
+                  autocomplete="off"
+                  placeholder="https://sketchfab.com/3d-models/…"
+                />
+                <button id="btn-paste" class="tiny" type="button">Paste</button>
+                <button id="btn-clear-url" class="tiny" type="button">Clear</button>
+              </div>
+              <p class="hint" id="desktop-hint"></p>
+            </div>
+
+            <!-- model meta -->
+            <div class="card model-card" id="model-card" hidden>
+              <div class="model-head">
+                <img id="model-thumb" class="thumb" alt="" hidden />
+                <div class="model-txt">
+                  <div class="model-name" id="model-name"></div>
+                  <div class="model-author" id="model-author"></div>
+                  <div class="model-stats hint" id="model-stats"></div>
+                  <div class="model-license hint" id="model-license"></div>
+                </div>
+              </div>
+              <p class="model-desc hint" id="model-desc"></p>
+            </div>
+
+            <!-- status -->
+            <div class="card">
+              <div id="ready" class="ready">Ready to download</div>
+              <div id="job-status" class="hint"></div>
+              <div id="progress" class="progress">
+                <div class="progress-track"><i id="progress-bar" class="progress-bar"></i></div>
+                <span id="progress-label" class="progress-label">0%</span>
+              </div>
+              <div id="status"></div>
+            </div>
+
+            <!-- actions -->
+            <button id="btn-dl" class="primary" type="button" disabled>
+              Download this model
+            </button>
+            <div class="row2">
+              <button id="btn-open-site" class="secondary" type="button" disabled>
+                Open on Sketchfab
+              </button>
+              <button id="btn-bulk" class="secondary" type="button">Bulk download…</button>
+            </div>
+
+            <!-- dev log -->
+            <div id="dev-panel" class="card">
+              <div class="dev-head">
+                <span id="dev-log-title">Download log</span>
+                <div class="dev-actions">
+                  <button id="btn-copy-log" class="tiny" type="button">Copy log</button>
+                  <button id="btn-save-log" class="tiny" type="button">Save log</button>
+                  <button id="btn-clear-log" class="tiny" type="button">Clear</button>
+                </div>
+              </div>
+              <pre id="dev-log"></pre>
+            </div>
+          </div>
+
+          <!-- ---------- 3D preview (ModHUB-style side panel) ---------- -->
+          <div class="col-right">
+            <div class="card preview-card" id="preview-card">
+              <div class="preview-head">
+                <span class="pv-title" id="pv-title">3D preview</span>
+                <span class="pv-badge" id="pv-badge">—</span>
+                <div class="spacer"></div>
+                <label class="pv-switch" for="pv-tex">
+                  <input type="checkbox" id="pv-tex" checked />
+                  <span id="pv-tex-label">Textures</span>
+                </label>
+                <button class="tiny" id="pv-refresh" type="button">Rebuild</button>
+                <button class="tiny" id="pv-full" type="button">Fullscreen</button>
+              </div>
+              <div class="preview-stage" id="pv-stage">
+                <canvas id="pv-canvas"></canvas>
+                <div class="pv-tools">
+                  <button class="tiny" id="pv-wire" type="button">Wireframe</button>
+                  <button class="tiny active" id="pv-grid" type="button">Floor grid</button>
+                  <button class="tiny" id="pv-rotate" type="button">Auto-rotate</button>
+                  <button class="tiny" id="pv-reset" type="button">Reset view</button>
+                  <button class="tiny" id="pv-shot" type="button">Save PNG</button>
+                </div>
+                <div class="pv-overlay" id="pv-overlay">
+                  <div class="pv-spinner"></div>
+                  <div class="pv-msg" id="pv-msg">Paste a model link to build the 3D preview</div>
+                </div>
+              </div>
+              <div class="preview-foot">
+                <span id="pv-stats" class="hint"></span>
+                <span id="pv-hint" class="hint"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================= BULK ======================= -->
+      <section id="pane-bulk" class="pane">
+        <div class="card">
+          <label class="cap" for="bulk-links" id="bulk-label">
+            Sketchfab URLs or UIDs (one per line)
+          </label>
+          <textarea id="bulk-links" rows="11" spellcheck="false"></textarea>
+          <div class="folder-line">
+            <span class="cap" id="bulk-folder-label">Folder for the archives</span>
+            <span class="path" id="bulk-folder">—</span>
+            <div class="spacer"></div>
+            <button class="tiny" id="bulk-pick" type="button">Choose folder…</button>
+            <button class="tiny" id="bulk-open" type="button">Open folder</button>
+          </div>
+          <p class="hint" id="bulk-folder-hint"></p>
+          <div class="row2">
+            <button id="bulk-start" class="primary" type="button">Download all</button>
+            <button id="bulk-stop" class="secondary" type="button" disabled>
+              Stop after current
+            </button>
+            <span id="bulk-summary" class="hint"></span>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="cap" id="bulk-queue-title">Queue</h2>
+          <div id="bulk-log" class="bulk-log"></div>
+        </div>
+      </section>
+
+      <!-- ======================= SETTINGS ======================= -->
+      <section id="pane-set" class="pane">
+        <div class="settings-grid">
+          <div class="card setting">
+            <span class="cap" id="win-settings-title">Windows app</span>
+
+            <span class="cap sub" id="save-mode-label">Save dialog</span>
+            <div id="save-mode-switch"></div>
+            <p class="hint" id="save-mode-hint"></p>
+
+            <div class="folder-line">
+              <span class="cap sub" id="last-folder-label">Save folder</span>
+              <span class="path" id="last-folder">—</span>
+              <div class="spacer"></div>
+              <button class="tiny" id="btn-pick-folder" type="button">Choose folder…</button>
+              <button class="tiny" id="btn-open-folder" type="button">Open</button>
+            </div>
+
+            <label class="check">
+              <input id="open-folder-toggle" type="checkbox" checked />
+              <span id="open-folder-label">Open Explorer with the saved file</span>
+            </label>
+            <label class="check">
+              <input id="preview-auto-toggle" type="checkbox" checked />
+              <span id="preview-auto-label">Build the 3D preview automatically</span>
+            </label>
+            <label class="check">
+              <input id="preview-tex-toggle" type="checkbox" checked />
+              <span id="preview-tex-label">Load textures in the preview</span>
+            </label>
+
+            <div class="folder-line">
+              <span class="cap sub" id="logs-label">Logs &amp; settings</span>
+              <span class="path" id="logs-path">—</span>
+              <div class="spacer"></div>
+              <button class="tiny" id="btn-open-logs" type="button">Open logs folder</button>
+            </div>
+            <p class="hint" id="logs-hint"></p>
+          </div>
+
+          <div class="card setting">
+            <span class="cap" id="settings-title">Settings</span>
+            <label class="check">
+              <input id="tex-toggle" type="checkbox" />
+              <span id="tex-label">Download textures</span>
+            </label>
+            <p class="hint" id="tex-hint"></p>
+            <label class="check">
+              <input id="dev-toggle" type="checkbox" />
+              <span id="dev-label">Dev mode</span>
+            </label>
+            <p class="hint" id="dev-hint"></p>
+
+            <span class="cap sub" id="theme-label">Theme</span>
+            <div id="theme-switch"></div>
+
+            <span class="cap sub" id="pack-label">Archive</span>
+            <div id="pack-switch"></div>
+            <p class="hint" id="pack-hint"></p>
+
+            <span class="cap sub" id="res-label">Texture size</span>
+            <div id="res-switch"></div>
+            <p class="hint" id="res-hint"></p>
+
+            <button id="btn-save-settings" class="primary" type="button">
+              Apply settings
+            </button>
+            <div id="settings-flash" class="settings-flash" hidden></div>
+            <p class="hint" id="settings-save-hint"></p>
+          </div>
+        </div>
+
+        <div class="card gh-box">
+          <a id="gh-link" href="#" rel="noreferrer">Project on GitHub</a>
+          <span class="gh-url" id="gh-url">github.com/seryi882/sketchfab-downloader-extension</span>
+          <span class="gh-url" id="app-paths"></span>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span class="hint" id="footer-state">—</span>
+      <span class="hint" id="footer-note"></span>
+    </footer>
+
+    <script src="./diag.js"></script>
+    <script type="module" src="./ui.js"></script>
+  </body>
+</html>
