@@ -27,6 +27,7 @@ const fsp = fs.promises;
 const path = require("path");
 const crypto = require("crypto");
 const store = require("./store");
+const { sanitizeBulkFileName } = require("./bulk-filename");
 
 const APP_ROOT = path.join(__dirname, ".."); // the app/ directory
 const SCHEME = "app";
@@ -983,7 +984,10 @@ ipcMain.handle("sf:bulkStart", async (_e, { urls, dir, flags } = {}) => {
     });
     const info = await probe(url);
     const meta = (info && info.meta) || {};
-    const fileName = suggestedName(meta, !!(flags && flags.textures));
+    const fileName = sanitizeBulkFileName(
+      suggestedName(meta, !!(flags && flags.textures)),
+      meta.uid,
+    );
     const target = uniquePath(path.join(dir, fileName));
     const res = await workerCall(
       {
