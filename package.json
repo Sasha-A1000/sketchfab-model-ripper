@@ -1,7 +1,7 @@
 {
   "name": "sketchfab-public-downloader-desktop",
   "productName": "Sketchfab Public Downloader",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Desktop build of the Sketchfab Public Downloader: public models to glTF (GLB) ZIP, with a 3D preview and Windows save dialog.",
   "author": "Sasha-A1000 (upstream extension by seryi882)",
   "license": "GPL-3.0-only",
