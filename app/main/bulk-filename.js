@@ -1,12 +1,12 @@
 /**
- * Bulk-only file-name sanitation.
+ * File-name sanitation for downloads saved without a native save dialog.
  *
- * The Bulk tab writes archives straight into `desktop.bulkDir` without the
- * Explorer save dialog, so names derived from model titles must be safe for
- * the Windows file system before the worker opens them.
+ * The Bulk tab and no-dialog single downloads write archives straight into
+ * their target folders, so names derived from model titles must be safe for
+ * the Windows file system before the final file is written.
  *
- * Single downloads keep using the native "Save as" dialog and are deliberately
- * not routed through this helper.
+ * Single downloads in "before"/"after" modes keep using the native "Save as"
+ * dialog and are deliberately not routed through this helper.
  */
 "use strict";
 
@@ -18,7 +18,7 @@ const TRAILING_DOTS_SPACES = /[. ]+$/;
 const RESERVED_NAME = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
 
 /**
- * Remove Windows-invalid characters from a bulk archive file name.
+ * Remove Windows-invalid characters from an automatically saved archive name.
  *
  * Valid names are returned byte-for-byte unchanged. When cleaning removes
  * characters, runs of spaces left behind are collapsed once and trailing

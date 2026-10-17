@@ -897,8 +897,9 @@ async function performDownload({ url, flags } = {}) {
 
   if (!finalPath) {
     if (mode === "auto") {
+      const fileName = sanitizeBulkFileName(name, meta.uid);
       finalPath = uniquePath(
-        path.join(desktop.lastSaveDir || app.getPath("downloads"), name),
+        path.join(desktop.lastSaveDir || app.getPath("downloads"), fileName),
       );
     } else {
       const picked = await askSavePath(name);
