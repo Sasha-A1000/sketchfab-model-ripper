@@ -1,6 +1,6 @@
 # Sketchfab Public Downloader — Desktop (Windows 10/11)
 
-**Application version: [latest release](https://github.com/Sasha-A1000/sketchfab-portable-downloader/releases/latest)**
+**Application version: [latest release](https://github.com/Sasha-A1000/sketchfab-model-ripper/releases/latest)**
 
 **Language / Язык:** **English** | [Русский](README.ru.md)
 
@@ -72,7 +72,7 @@ discard it.
 
 ## Run the portable build
 
-Download the portable exe from the **[latest release](https://github.com/Sasha-A1000/sketchfab-portable-downloader/releases/latest)** page and run it.
+Download the portable exe from the **[latest release](https://github.com/Sasha-A1000/sketchfab-model-ripper/releases/latest)** page and run it.
 It is a single-file portable build; there is no installer or setup wizard. The
 portable launcher may unpack application files into a temporary directory while
 it runs. Preferences remain in `%APPDATA%\Sketchfab Public Downloader`.
@@ -81,7 +81,7 @@ it runs. Preferences remain in `%APPDATA%\Sketchfab Public Downloader`.
 > → More info → Run anyway.
 
 When redistributing the executable, include a link to this public source
-repository: <https://github.com/Sasha-A1000/sketchfab-portable-downloader>.
+repository: <https://github.com/Sasha-A1000/sketchfab-model-ripper>.
 
 ---
 
@@ -226,6 +226,6 @@ component-level notes and [LICENSE](LICENSE) for the unmodified GNU GPL v3 text.
 * **Electron** and **electron-builder** — MIT.
 
 When sharing a built executable, include a link to this public repository:
-<https://github.com/Sasha-A1000/sketchfab-portable-downloader>.
+<https://github.com/Sasha-A1000/sketchfab-model-ripper>.
 
 Copyright (C) 2026 seryi882
