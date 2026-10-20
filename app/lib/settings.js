@@ -31,7 +31,7 @@ function detectUiLang() {
 }
 
 export const GITHUB_URL =
-  "https://github.com/Sasha-A1000/sketchfab-portable-downloader";
+  "https://github.com/Sasha-A1000/sketchfab-model-ripper";
 
 export const DEFAULT_PREFS = {
   textures: false,

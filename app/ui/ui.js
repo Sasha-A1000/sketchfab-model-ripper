@@ -997,7 +997,7 @@ async function init() {
   const projectUrl =
     typeof info.githubUrl === "string" && /^https:\/\//i.test(info.githubUrl)
       ? info.githubUrl
-      : "https://github.com/Sasha-A1000/sketchfab-portable-downloader";
+      : "https://github.com/Sasha-A1000/sketchfab-model-ripper";
   el.ghLink.href = projectUrl;
   el.ghUrl.dataset.url = projectUrl;
   el.ghUrl.textContent = projectUrl.replace(/^https?:\/\//i, "");

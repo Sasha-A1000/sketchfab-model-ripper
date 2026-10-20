@@ -34,7 +34,7 @@ const SCHEME = "app";
 const BUNDLE = `${SCHEME}://bundle/`;
 const TITLE = "Sketchfab Public Downloader";
 const PROJECT_URL =
-  "https://github.com/Sasha-A1000/sketchfab-portable-downloader";
+  "https://github.com/Sasha-A1000/sketchfab-model-ripper";
 
 const isWin = process.platform === "win32";
 
