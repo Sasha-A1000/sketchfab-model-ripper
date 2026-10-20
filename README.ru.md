@@ -1,6 +1,6 @@
 # Sketchfab Public Downloader — Desktop (Windows 10/11)
 
-**Версия desktop-приложения: [последний релиз](https://github.com/Sasha-A1000/sketchfab-portable-downloader/releases/latest)**
+**Версия desktop-приложения: [последний релиз](https://github.com/Sasha-A1000/sketchfab-model-ripper/releases/latest)**
 
 **Language / Язык:** [English](README.md) | **Русский**
 
@@ -77,7 +77,7 @@ metal+roughness → **ORM**, скины/кости/анимации, `info.json`
 
 ## Запуск portable-сборки
 
-Скачайте portable exe со страницы **[последний релиз](https://github.com/Sasha-A1000/sketchfab-portable-downloader/releases/latest)** и запустите его.
+Скачайте portable exe со страницы **[последний релиз](https://github.com/Sasha-A1000/sketchfab-model-ripper/releases/latest)** и запустите его.
 Это один portable-файл, установщика и мастера установки нет. При запуске
 лаунчер может распаковывать файлы приложения во временную папку; настройки
 сохраняются в `%APPDATA%\Sketchfab Public Downloader`.
@@ -86,7 +86,7 @@ metal+roughness → **ORM**, скины/кости/анимации, `info.json`
 > «Неизвестный издатель» → «Подробнее» → «Выполнить в любом случае».
 
 При распространении `.exe` обязательно приложите ссылку на публичный исходный
-репозиторий: <https://github.com/Sasha-A1000/sketchfab-portable-downloader>.
+репозиторий: <https://github.com/Sasha-A1000/sketchfab-model-ripper>.
 
 ---
 
@@ -244,6 +244,6 @@ app/
 * **Electron** и **electron-builder** — MIT.
 
 При распространении готового `.exe` приложите ссылку на публичный репозиторий
-с исходниками: <https://github.com/Sasha-A1000/sketchfab-portable-downloader>.
+с исходниками: <https://github.com/Sasha-A1000/sketchfab-model-ripper>.
 
 Copyright (C) 2026 seryi882
